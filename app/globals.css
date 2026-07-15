@@ -1,26 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* Design tokens as CSS variables (derived from config/theme/tokens.js) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Colors */
+  --color-primary-dark: #1D2A62;
+  --color-primary-light: #87ADEC;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent-lightgreen: #ADD061;
+  --color-accent-darkgreen: #437118;
+  --color-cream: #F5F3D8;
+
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+
+  --semantic-success: #10AA2B;
+  --semantic-danger: #C0000F;
+  --semantic-warning: #F97316;
+  --semantic-info: #1D2A62;
+
+  --button-primary: #1D2A62;
+  --button-secondary: #87ADEC;
+  --button-success: #10AA2B;
+  --button-danger: #C0000F;
+
+  /* Text */
+  --text-primary: #000000;
+  --text-secondary: #595959;
+  --text-light: #FFFFFF;
+  --text-accent: #437118;
+
+  /* Backgrounds */
+  --bg-light: #FFFFFF;
+  --bg-cream: #F5F3D8;
+  --bg-dark: #1D2A62;
+
+  /* Typography */
+  --font-family-primary: 'Poppins', Arial, Helvetica, sans-serif;
+
+  /* Spacing & radius */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* For dark mode we keep tokens but you can override if needed */
+    --bg-light: #0a0a0a;
+    --text-primary: #ededed;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Base styles */
+html, body {
+  height: 100%;
 }
+body {
+  background: var(--bg-light);
+  color: var(--text-primary);
+  font-family: var(--font-family-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility helper for visually-hidden content */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Example simple token-based classes (can be expanded as needed) */
+.btn-primary { background-color: var(--button-primary); color: var(--text-light); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+.btn-secondary { background-color: var(--button-secondary); color: var(--text-primary); border-radius: var(--radius-md); }
+
