@@ -123,9 +123,12 @@ export default function Sidebar() {
       {/* BAGIAN BAWAH: Profil User & Logout */}
       <div className="p-4 border-t-2 border-(--color-primary-light)/20 space-y-2">
         {/* Card Info User */}
-        <div className="flex items-center gap-3 bg-(--color-primary-light)/10 p-3 rounded-xl border border-slate-800">
+        <Link
+          href="/admin/profil"
+          className="flex items-center gap-3 bg-(--color-primary-light)/10 p-3 rounded-xl border border-slate-800 hover:bg-(--color-primary-light)/20 transition active:scale-98 block group"
+        >
           {/* Avatar Bulat Huruf A */}
-          <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center font-bold text-white text-lg shrink-0">
+          <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center font-bold text-white text-lg shrink-0 group-hover:scale-105 transition-transform duration-200">
             A
           </div>
           {/* Detail Teks */}
@@ -135,7 +138,7 @@ export default function Sidebar() {
             </span>
             <span className="text-xs text-slate-400 truncate">Super Admin</span>
           </div>
-        </div>
+        </Link>
 
         {/* Tombol Logout */}
         <button

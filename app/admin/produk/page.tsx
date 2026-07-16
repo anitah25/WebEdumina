@@ -5,6 +5,7 @@ import { ProductIcon } from "@/components/admin/Icons";
 import ProductFormModal from "@/components/admin/produk/ProductFormModal";
 import DeleteConfirmModal from "@/components/admin/produk/DeleteConfirmModal";
 import ProductDetailModal from "@/components/admin/produk/ProductDetailModal";
+import ImageLightboxModal from "@/components/admin/produk/ImageLightboxModal";
 
 interface Product {
   id: number;
@@ -66,11 +67,15 @@ export default function ProdukCRUDPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   // Selection states
   const [editingId, setEditingId] = useState<number | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [selectedDetailProduct, setSelectedDetailProduct] = useState<Product | null>(null);
+  const [selectedDetailProduct, setSelectedDetailProduct] =
+    useState<Product | null>(null);
+  const [lightboxImage, setLightboxImage] = useState("");
+  const [lightboxTitle, setLightboxTitle] = useState("");
 
   // Notifications status
   const [notification, setNotification] = useState<{
@@ -121,8 +126,20 @@ export default function ProdukCRUDPage() {
     setIsDetailOpen(true);
   };
 
+  // Open image lightbox zoom popup
+  const handleOpenLightbox = (imageUrl: string, title: string) => {
+    setLightboxImage(imageUrl);
+    setLightboxTitle(title);
+    setIsLightboxOpen(true);
+  };
+
   // Save Product (Create / Update)
-  const handleSaveProduct = (name: string, desc: string, image: string, wa: string) => {
+  const handleSaveProduct = (
+    name: string,
+    desc: string,
+    image: string,
+    wa: string,
+  ) => {
     // Standardize WhatsApp URL format
     let cleanWaNum = wa.trim().replace(/[^\d+]/g, "");
     if (!cleanWaNum.startsWith("+")) {
@@ -139,9 +156,15 @@ export default function ProdukCRUDPage() {
       setProducts((prev) =>
         prev.map((p) =>
           p.id === editingId
-            ? { ...p, nama_produk: name, deskripsi: desc, gambar: image, link_wa: cleanWaLink }
-            : p
-        )
+            ? {
+                ...p,
+                nama_produk: name,
+                deskripsi: desc,
+                gambar: image,
+                link_wa: cleanWaLink,
+              }
+            : p,
+        ),
       );
       setNotification({
         message: "Produk berhasil diperbarui!",
@@ -185,7 +208,7 @@ export default function ProdukCRUDPage() {
         <div
           className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-lg border transition-all duration-300 transform translate-y-0 ${
             notification.type === "success"
-              ? "bg-[#EAF5D6] border-[#ADD061] text-[#437118]"
+              ? "bg-[#ADD061]/15 border-[#ADD061]/50 text-[#437118]"
               : "bg-red-50 border-red-200 text-red-700"
           }`}
         >
@@ -241,7 +264,7 @@ export default function ProdukCRUDPage() {
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 bg-[#ADD061] hover:bg-[#9bc24e] active:scale-95 text-[#1D2A62] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center"
+          className="inline-flex items-center justify-center gap-2 bg-(--color-accent-lightgreen) hover:bg-(--color-accent-lightgreen)/80 active:scale-95 text-(--color-primary-dark) px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center"
         >
           <svg
             className="w-4 h-4 shrink-0"
@@ -284,7 +307,7 @@ export default function ProdukCRUDPage() {
             placeholder="Cari produk berdasarkan nama atau deskripsi..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition"
           />
         </div>
 
@@ -370,7 +393,7 @@ export default function ProdukCRUDPage() {
                     onClick={(e) => e.stopPropagation()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 bg-[#EAF5D6] hover:bg-[#e1f0c4] text-[#437118] py-2 px-3 rounded-xl font-bold text-xs transition border border-[#ADD061]/20 active:scale-98"
+                    className="w-full flex items-center justify-center gap-2 bg-[#F5F3D8] hover:bg-[#ebe9cc] text-[#437118] py-2 px-3 rounded-xl font-bold text-xs transition border border-[#ADD061]/30 active:scale-98"
                   >
                     {/* WhatsApp icon */}
                     <svg
@@ -382,7 +405,7 @@ export default function ProdukCRUDPage() {
                     </svg>
                     WhatsApp Tester
                   </a>
- 
+
                   {/* Actions buttons */}
                   <div className="flex gap-2 text-xs">
                     <button
@@ -466,7 +489,11 @@ export default function ProdukCRUDPage() {
       <ProductFormModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
-        editingProduct={editingId !== null ? products.find((p) => p.id === editingId) || null : null}
+        editingProduct={
+          editingId !== null
+            ? products.find((p) => p.id === editingId) || null
+            : null
+        }
         onSave={handleSaveProduct}
       />
 
@@ -481,6 +508,16 @@ export default function ProdukCRUDPage() {
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         product={selectedDetailProduct}
+        onImageClick={(url) =>
+          handleOpenLightbox(url, selectedDetailProduct?.nama_produk || "")
+        }
+      />
+
+      <ImageLightboxModal
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+        imageUrl={lightboxImage}
+        productName={lightboxTitle}
       />
     </div>
   );
