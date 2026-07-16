@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const navItems = [
   { id: "beranda", label: "Beranda" },
@@ -14,39 +15,142 @@ const navItems = [
   { id: "kontak", label: "Kontak" },
 ];
 
+const NAVBAR_H = 72; // px — tinggi navbar (harus sesuai pt-[72px] di page.tsx)
+const SCROLL_LOCK_MS = 900; // ms — kunci observer setelah klik nav
+
+// ── Scroll helper ─────────────────────────────────────────────
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - NAVBAR_H;
+  window.scrollTo({ top, behavior: "smooth" });
+}
+
 export default function Navbar() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
+  // ── Scrolled shadow ───────────────────────────────────────────
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ── Active section (via IntersectionObserver) ─────────────────
+  const [activeId, setActiveId] = useState("beranda");
+  // Referensi scroll-lock: saat klik nav, observer tidak boleh override dulu
+  const scrollLockRef = useRef(false);
+  const lockTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isHome) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Abaikan update dari observer saat sedang dalam scroll-lock
+        if (scrollLockRef.current) return;
+        entries.forEach((e) => {
+          if (e.isIntersecting) setActiveId(e.target.id);
+        });
+      },
+      // rootMargin: potong 72px atas (navbar) + potong 50% bawah
+      // sehingga section aktif = yang ada di 50% atas viewport
+      { rootMargin: `-${NAVBAR_H}px 0px -50% 0px`, threshold: 0 }
+    );
+    navItems.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [isHome]);
+
+  // ── Click handler ─────────────────────────────────────────────
+  function handleNavClick(e: React.MouseEvent, id: string) {
+    if (!isHome) return;
+    e.preventDefault();
+
+    // 1. Langsung set active ke section yang diklik
+    setActiveId(id);
+
+    // 2. Kunci observer agar tidak override sebelum scroll selesai
+    scrollLockRef.current = true;
+    clearTimeout(lockTimerRef.current);
+    lockTimerRef.current = setTimeout(() => {
+      scrollLockRef.current = false;
+    }, SCROLL_LOCK_MS);
+
+    // 3. Smooth scroll
+    scrollToSection(id);
+  }
+
   return (
-    <header className="w-full bg-[var(--color-primary-dark)] text-white">
-      <div className="mx-auto max-w-7xl px-6 py-3 lg:px-8 flex items-center gap-10">
-        <div className="flex shrink-0 items-center gap-4">
-          <Link href="#beranda" className="flex items-center gap-8 whitespace-nowrap" aria-label="Beranda">
+    <header
+      className="fixed top-0 left-0 right-0 z-50 w-full text-white transition-shadow duration-300"
+      style={{
+        backgroundColor: "var(--color-primary-dark)",
+        boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.35)" : "none",
+      }}
+    >
+      <div className="w-full px-6 py-3 lg:px-12 flex items-center gap-8 max-w-[1440px] mx-auto">
+
+        {/* ── Logo ── */}
+        <div className="flex shrink-0 items-center">
+          <Link
+            href={isHome ? "#beranda" : "/#beranda"}
+            onClick={(e) => handleNavClick(e, "beranda")}
+            className="flex items-center gap-4 whitespace-nowrap"
+            aria-label="Beranda"
+          >
             <div className="leading-tight select-none whitespace-nowrap">
-              <span className="text-xl font-bold text-[var(--color-accent-darkgreen)]">Edumina</span>{" "}
-              <span className="text-xl font-bold text-white">Kampung Siroto</span>
+              <span className="text-xl font-bold text-[var(--color-accent-darkgreen)]">
+                Edumina
+              </span>{" "}
+              <span className="text-xl font-bold text-white">
+                Kampung Siroto
+              </span>
             </div>
             <Image src="/logoNavbar.svg" alt="logo" width={150} height={60} priority />
           </Link>
         </div>
 
-        <nav className="flex-1 pl-8">
-          <ul className="flex gap-5 justify-center items-center">
-            {navItems.map((item) => (
-              <li key={item.id}>
-                <a
-                  href={`#${item.id}`}
-                  className="whitespace-nowrap text-[var(--color-primary-light)] hover:text-white focus:text-white focus:underline focus:outline-none transition-colors duration-150"
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
+        {/* ── Nav links ── */}
+        <nav className="flex-1">
+          <ul className="flex gap-5 justify-start items-center">
+            {navItems.map((item) => {
+              const isActive = isHome && activeId === item.id;
+              return (
+                <li key={item.id} className="relative py-1">
+                  <Link
+                    href={isHome ? `#${item.id}` : `/#${item.id}`}
+                    onClick={(e) => handleNavClick(e, item.id)}
+                    className="whitespace-nowrap text-sm font-medium transition-colors duration-150 focus:outline-none"
+                    style={{
+                      color: isActive ? "#fff" : "var(--color-primary-light)",
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+
+                  {/* Active underline indicator */}
+                  <span
+                    className="absolute bottom-0 left-0 h-[2px] rounded-full transition-all duration-300"
+                    style={{
+                      width: isActive ? "100%" : "0%",
+                      backgroundColor: "var(--color-accent-lightgreen)",
+                    }}
+                  />
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
+        {/* ── Login button ── */}
         <div className="flex items-center">
           <Link
-            href="#login"
-            className="ml-4 inline-block rounded-full bg-[var(--button-secondary)] px-5 py-2 text-base font-medium text-white shadow-[0_6px_12px_rgba(17,24,39,0.18)] hover:bg-[var(--button-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--button-primary)]"
+            href="/login"
+            className="ml-4 inline-block rounded-full bg-[var(--button-secondary)] px-5 py-2 text-sm font-medium text-white shadow-[0_6px_12px_rgba(17,24,39,0.18)] hover:bg-[var(--button-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--button-primary)]"
             aria-label="Login"
           >
             Login
