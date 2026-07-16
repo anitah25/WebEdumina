@@ -22,7 +22,10 @@ function BeritaCard({ item }: { item: Berita }) {
       }}
     >
       {/* Image — left side */}
-      <div className="relative flex-shrink-0" style={{ width: "144px", height: "138px" }}>
+      <div
+        className="relative flex-shrink-0"
+        style={{ width: "144px", height: "138px" }}
+      >
         <Image
           src={item.gambar}
           alt={item.judul}
@@ -46,7 +49,12 @@ function BeritaCard({ item }: { item: Berita }) {
         {/* Date */}
         <p
           className="absolute left-0 text-gray-500"
-          style={{ top: "85px", fontSize: "15px", fontWeight: 300, fontFamily: "Poppins, sans-serif" }}
+          style={{
+            top: "85px",
+            fontSize: "15px",
+            fontWeight: 300,
+            fontFamily: "Poppins, sans-serif",
+          }}
         >
           {item.tanggal}
         </p>
@@ -84,7 +92,6 @@ export default function BeritaSection() {
   return (
     <section id="berita" className="w-full bg-white py-16 lg:py-20">
       <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
-
         {/* ── Header ── */}
         <div className="mb-8">
           <span className="text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
@@ -103,20 +110,11 @@ export default function BeritaSection() {
         <div className="flex justify-center mt-10">
           <Link
             href="/berita"
-            className="inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 hover:opacity-90 active:scale-95"
-            style={{
-              backgroundColor: "#8FACCA",
-              color: "#1D2A62",
-              padding: "10px 40px",
-              fontSize: "15px",
-              fontFamily: "Poppins, sans-serif",
-              boxShadow: "2px 4px 4px rgba(0,0,0,0.15)",
-            }}
+            className="inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 hover:opacity-90 active:scale-95 bg-(--color-accent-darkgreen) hover:bg-(--color-accent-darkgreen)/50 text-white px-6 py-3 text-sm"
           >
             Lihat Lainnya
           </Link>
         </div>
-
       </div>
     </section>
   );

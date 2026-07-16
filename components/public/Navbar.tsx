@@ -30,6 +30,18 @@ export default function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
+  // ── Login state detection ─────────────────────────────────────
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    const checkLoginState = () => {
+      const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+      setIsLoggedIn(loggedIn);
+    };
+    checkLoginState();
+    window.addEventListener("storage", checkLoginState);
+    return () => window.removeEventListener("storage", checkLoginState);
+  }, []);
+
   // ── Scrolled shadow ───────────────────────────────────────────
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -42,7 +54,9 @@ export default function Navbar() {
   const [activeId, setActiveId] = useState("beranda");
   // Referensi scroll-lock: saat klik nav, observer tidak boleh override dulu
   const scrollLockRef = useRef(false);
-  const lockTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const lockTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     if (!isHome) return;
@@ -56,7 +70,7 @@ export default function Navbar() {
       },
       // rootMargin: potong 72px atas (navbar) + potong 50% bawah
       // sehingga section aktif = yang ada di 50% atas viewport
-      { rootMargin: `-${NAVBAR_H}px 0px -50% 0px`, threshold: 0 }
+      { rootMargin: `-${NAVBAR_H}px 0px -50% 0px`, threshold: 0 },
     );
     navItems.forEach(({ id }) => {
       const el = document.getElementById(id);
@@ -86,14 +100,13 @@ export default function Navbar() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 w-full text-white transition-shadow duration-300"
+      className="fixed top-0 left-0 right-0 z-50 w-full text-white transition-shadow duration-300 h-[72px] flex items-center"
       style={{
         backgroundColor: "var(--color-primary-dark)",
         boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.35)" : "none",
       }}
     >
       <div className="w-full px-6 py-3 lg:px-12 flex items-center gap-8 max-w-[1440px] mx-auto">
-
         {/* ── Logo ── */}
         <div className="flex shrink-0 items-center">
           <Link
@@ -102,21 +115,26 @@ export default function Navbar() {
             className="flex items-center gap-4 whitespace-nowrap"
             aria-label="Beranda"
           >
-            <div className="leading-tight select-none whitespace-nowrap">
-              <span className="text-xl font-bold text-[var(--color-accent-darkgreen)]">
-                Edumina
-              </span>{" "}
-              <span className="text-xl font-bold text-white">
+            <h2 className="text-2xl font-black text-(--color-accent-darkgreen) leading-4">
+              Edumina
+              <br />
+              <span className="text-lg text-(--color-primary-light)">
                 Kampung Siroto
               </span>
-            </div>
-            <Image src="/logoNavbar.svg" alt="logo" width={150} height={60} priority />
+            </h2>
+            <Image
+              src="/logoNavbar.svg"
+              alt="logo"
+              width={150}
+              height={60}
+              priority
+            />
           </Link>
         </div>
 
         {/* ── Nav links ── */}
         <nav className="flex-1">
-          <ul className="flex gap-5 justify-start items-center">
+          <ul className="flex gap-5 justify-end items-center">
             {navItems.map((item) => {
               const isActive = isHome && activeId === item.id;
               return (
@@ -146,15 +164,28 @@ export default function Navbar() {
           </ul>
         </nav>
 
-        {/* ── Login button ── */}
+        {/* ── Login / Dashboard button ── */}
         <div className="flex items-center">
-          <Link
-            href="/login"
-            className="ml-4 inline-block rounded-full bg-[var(--button-secondary)] px-5 py-2 text-sm font-medium text-white shadow-[0_6px_12px_rgba(17,24,39,0.18)] hover:bg-[var(--button-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--button-primary)]"
-            aria-label="Login"
-          >
-            Login
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/admin"
+              className="ml-4 inline-block rounded-full bg-[#ADD061] px-5 py-2 text-sm font-bold text-[#1D2A62] shadow-[0_6px_12px_rgba(17,24,39,0.18)] hover:bg-[#437118] hover:text-white transition-colors focus-visible:outline-none"
+              aria-label="Dashboard"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/admin"
+              onClick={() => {
+                localStorage.setItem("isLoggedIn", "true");
+              }}
+              className="ml-4 inline-block rounded-full bg-[var(--button-secondary)] px-5 py-2 text-sm font-medium text-white shadow-[0_6px_12px_rgba(17,24,39,0.18)] hover:bg-[var(--button-primary)] transition-colors focus-visible:outline-none"
+              aria-label="Login"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </header>

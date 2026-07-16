@@ -25,8 +25,9 @@ const navigationItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const handleLogout = () => {
-    // Implementasikan logika logout di sini
     console.log("Logout clicked");
+    localStorage.removeItem("isLoggedIn");
+    window.location.href = "/";
   };
 
   return (

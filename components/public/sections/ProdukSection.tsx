@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { produkList } from "@/data/content/produk";
 import type { Produk } from "@/types/produk";
 
@@ -13,6 +13,7 @@ const VISIBLE = 5; // items visible at a time on desktop
 //   white circle 183×183px with box-shadow: 2px 4px 4px rgba(0,0,0,0.25)
 //   product image centered inside the circle
 //   name label centered below
+// function ProdukCard
 function ProdukCard({ item }: { item: Produk }) {
   return (
     <div className="flex flex-col items-center gap-3 flex-shrink-0">
@@ -51,8 +52,15 @@ export default function ProdukSection() {
   const maxIndex = Math.max(0, total - VISIBLE);
   const [current, setCurrent] = useState(0);
 
-  const prev = () => setCurrent((c) => Math.max(0, c - 1));
-  const next = () => setCurrent((c) => Math.min(maxIndex, c + 1));
+  const prev = () => setCurrent((c) => (c === 0 ? maxIndex : c - 1));
+  const next = () => setCurrent((c) => (c >= maxIndex ? 0 : c + 1));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      next();
+    }, 4000); // auto-slide every 4 seconds
+    return () => clearInterval(timer);
+  }, [current, maxIndex]);
 
   const dots = Array.from({ length: maxIndex + 1 });
 
@@ -63,8 +71,8 @@ export default function ProdukSection() {
     <section id="produk" className="w-full bg-white py-16 lg:py-20 overflow-hidden">
       <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
 
-        {/* ── Header ── */}
-        <div className="mb-10">
+        {/* ── Header — center aligned ── */}
+        <div className="mb-10 text-center">
           <span className="text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
             Produk Kami
           </span>
@@ -76,12 +84,10 @@ export default function ProdukSection() {
           {/* Prev button */}
           <button
             onClick={prev}
-            disabled={current === 0}
             aria-label="Sebelumnya"
             className="absolute left-0 top-[91px] -translate-x-5 z-10
                        w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
                        flex items-center justify-center
-                       disabled:opacity-30 disabled:cursor-not-allowed
                        hover:bg-[#263580] transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -107,12 +113,10 @@ export default function ProdukSection() {
           {/* Next button */}
           <button
             onClick={next}
-            disabled={current === maxIndex}
             aria-label="Selanjutnya"
             className="absolute right-0 top-[91px] translate-x-5 z-10
                        w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
                        flex items-center justify-center
-                       disabled:opacity-30 disabled:cursor-not-allowed
                        hover:bg-[#263580] transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">

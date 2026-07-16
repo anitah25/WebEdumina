@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { aktivitasList } from "@/data/content/aktivitas";
 import type { Aktivitas } from "@/types/aktivitas";
 
@@ -83,8 +83,15 @@ export default function AktivitasSection() {
   const [current, setCurrent] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  const prev = () => setCurrent((c) => Math.max(0, c - 1));
-  const next = () => setCurrent((c) => Math.min(maxIndex, c + 1));
+  const prev = () => setCurrent((c) => (c === 0 ? maxIndex : c - 1));
+  const next = () => setCurrent((c) => (c >= maxIndex ? 0 : c + 1));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      next();
+    }, 4000); // auto-slide every 4 seconds
+    return () => clearInterval(timer);
+  }, [current, maxIndex]);
 
   // Dots: one per possible position
   const dots = Array.from({ length: maxIndex + 1 });

@@ -93,7 +93,6 @@ const contacts = [
   },
 ];
 
-
 // ── Footer Component ──────────────────────────────────────────
 export default function Footer() {
   const pathname = usePathname();
@@ -108,14 +107,14 @@ export default function Footer() {
     >
       <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px] py-12 lg:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-8">
-
           {/* ── Col 1: Mitra + Lokasi ── */}
           <div className="flex flex-col gap-8">
-
             {/* Mitra Kami */}
             <div>
-              <p className="text-sm font-bold text-[#F5F3DC] uppercase tracking-widest mb-4"
-                style={{ fontFamily: "Poppins, sans-serif" }}>
+              <p
+                className="text-sm font-bold text-[#F5F3DC] uppercase tracking-widest mb-4"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
                 Mitra Kami
               </p>
               <div className="bg-white rounded-2xl px-5 py-3 flex items-center justify-center">
@@ -131,8 +130,10 @@ export default function Footer() {
 
             {/* Lokasi Kami */}
             <div>
-              <p className="text-sm font-bold text-[#F5F3DC] uppercase tracking-widest mb-3"
-                style={{ fontFamily: "Poppins, sans-serif" }}>
+              <p
+                className="text-sm font-bold text-[#F5F3DC] uppercase tracking-widest mb-3"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
                 Lokasi Kami
               </p>
               <a
@@ -144,13 +145,19 @@ export default function Footer() {
               >
                 {/* Pin icon */}
                 <span className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-white/10 group-hover:bg-[#AFD06E]/20 transition-colors duration-200">
-                  <svg className="w-4 h-4 text-[#AFD06E]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  <svg
+                    className="w-4 h-4 text-[#AFD06E]"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                   </svg>
                 </span>
                 <span className="text-sm leading-relaxed group-hover:underline underline-offset-2">
-                  Siroto, Gunungpati, Semarang,<br />
-                  Gunungpati, Kec. Gn. Pati,<br />
+                  Siroto, Gunungpati, Semarang,
+                  <br />
+                  Gunungpati, Kec. Gn. Pati,
+                  <br />
                   Kota Semarang, Jawa Tengah 50225
                 </span>
               </a>
@@ -159,8 +166,10 @@ export default function Footer() {
 
           {/* ── Col 2: Menu ── */}
           <div>
-            <p className="text-sm font-bold text-[#F5F3DC] uppercase tracking-widest mb-5"
-              style={{ fontFamily: "Poppins, sans-serif" }}>
+            <p
+              className="text-sm font-bold text-[#F5F3DC] uppercase tracking-widest mb-5"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+            >
               Menu
             </p>
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
@@ -179,8 +188,10 @@ export default function Footer() {
 
           {/* ── Col 3: Hubungi Kami ── */}
           <div>
-            <p className="text-sm font-bold text-[#F5F3DC] uppercase tracking-widest mb-5"
-              style={{ fontFamily: "Poppins, sans-serif" }}>
+            <p
+              className="text-sm font-bold text-[#F5F3DC] uppercase tracking-widest mb-5"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+            >
               Hubungi Kami
             </p>
             <div className="flex flex-col gap-3">
@@ -207,16 +218,22 @@ export default function Footer() {
               ))}
             </div>
           </div>
-
         </div>
 
         {/* ── Bottom bar ── */}
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-white/40 text-xs" style={{ fontFamily: "Poppins, sans-serif" }}>
-            © {new Date().getFullYear()} Study Center Edumina Kampung Siroto. All rights reserved.
+          <p
+            className="text-white/40 text-xs"
+            style={{ fontFamily: "Poppins, sans-serif" }}
+          >
+            © {new Date().getFullYear()} Study Center Edumina Kampung Siroto.
+            All rights reserved.
           </p>
-          <p className="text-white/30 text-xs" style={{ fontFamily: "Poppins, sans-serif" }}>
-            Dibuat dengan ❤️ untuk kemandirian pangan lokal
+          <p
+            className="text-white/30 text-xs"
+            style={{ fontFamily: "Poppins, sans-serif" }}
+          >
+            Developed by KKN UNNES GIAT 16 Kampung Siroto 2026
           </p>
         </div>
       </div>

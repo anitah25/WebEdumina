@@ -61,7 +61,7 @@ function PaketCard({ item }: { item: PaketEdukasi }) {
       >
         {/* Icon */}
         <div
-          className="absolute flex items-center justify-center rounded-full bg-[var(--color-accent-lightgreen)]/25"
+          className="absolute flex items-center justify-center rounded-full bg-(--color-accent-lightgreen)/40"
           style={{ top: "21px", left: "16px", width: "40px", height: "40px" }}
         >
           <EduIcon />
@@ -102,7 +102,7 @@ function PaketCard({ item }: { item: PaketEdukasi }) {
           style={{
             top: "95px",
             left: "16px",
-            backgroundColor: "#b6cf7b",
+            backgroundColor: "var(--color-accent-darkgreen)",
             padding: "3px 10px",
           }}
         >
@@ -141,7 +141,6 @@ export default function PaketEdukasiSection() {
   return (
     <section id="paket-edukasi" className="w-full bg-white py-16 lg:py-20">
       <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
-
         {/* ── Header — centered green title ── */}
         <div className="flex flex-col items-center text-center mb-10">
           <h2
@@ -158,7 +157,6 @@ export default function PaketEdukasiSection() {
             <PaketCard key={item.id} item={item} />
           ))}
         </div>
-
       </div>
     </section>
   );
