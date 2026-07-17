@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { paketEdukasiList } from "@/data/content/paketEdukasi";
 import type { PaketEdukasi } from "@/types/paketEdukasi";
+import PaketEdukasiModal from "../modals/PaketEdukasiModal";
 
 // ── Icon: training/education ─────────────────────────────────
 function EduIcon() {
@@ -28,14 +30,21 @@ function EduIcon() {
 //   card 342px tall, image 264px, white box overlaps at 206px
 //   icon at 227px left-16, title+desc right of icon,
 //   price badge + selengkapnya button at bottom row (299-301px)
-function PaketCard({ item }: { item: PaketEdukasi }) {
+function PaketCard({
+  item,
+  onClick
+}: {
+  item: PaketEdukasi;
+  onClick: () => void;
+}) {
   return (
     <div
-      className="relative overflow-hidden flex-shrink-0 w-full rounded-lg"
+      className="relative overflow-hidden flex-shrink-0 w-full rounded-lg cursor-pointer hover:scale-[1.02] transition-transform"
       style={{
         height: "342px",
         boxShadow: "0 4px 16px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)",
       }}
+      onClick={onClick}
     >
       {/* Image */}
       <div className="absolute top-0 left-0 w-full" style={{ height: "264px" }}>
@@ -116,7 +125,7 @@ function PaketCard({ item }: { item: PaketEdukasi }) {
 
         {/* Selengkapnya button */}
         <div
-          className="absolute flex items-center justify-center rounded-lg cursor-pointer hover:bg-[var(--color-accent-lightgreen)]/10 transition-colors"
+          className="absolute flex items-center justify-center rounded-lg hover:bg-[var(--color-accent-lightgreen)]/10 transition-colors"
           style={{
             top: "93px",
             right: "12px",
@@ -138,28 +147,49 @@ function PaketCard({ item }: { item: PaketEdukasi }) {
 
 // ── Main Section ─────────────────────────────────────────────
 export default function PaketEdukasiSection() {
+  // Modal state
+  const [selectedItem, setSelectedItem] = useState<PaketEdukasi | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const handleCardClick = (item: PaketEdukasi) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
   return (
-    <section id="paket-edukasi" className="w-full bg-white py-16 lg:py-20">
-      <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
+    <>
+      <section id="paket-edukasi" className="w-full bg-white py-16 lg:py-20">
+        <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
 
-        {/* ── Header — centered green title ── */}
-        <div className="flex flex-col items-center text-center mb-10">
-          <h2
-            className="font-bold text-[var(--color-accent-darkgreen)]"
-            style={{ fontSize: "20px", fontFamily: "Poppins, sans-serif" }}
-          >
-            Paket Edukasi
-          </h2>
+          {/* ── Header — centered green title ── */}
+          <div className="flex flex-col items-center text-center mb-10">
+            <h2
+              className="font-bold text-[var(--color-accent-darkgreen)]"
+              style={{ fontSize: "20px", fontFamily: "Poppins, sans-serif" }}
+            >
+              Paket Edukasi
+            </h2>
+          </div>
+
+          {/* ── Grid: 4 kolom, semua paket tampil langsung ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            {paketEdukasiList.map((item) => (
+              <PaketCard
+                key={item.id}
+                item={item}
+                onClick={() => handleCardClick(item)}
+              />
+            ))}
+          </div>
+
         </div>
+      </section>
 
-        {/* ── Grid: 4 kolom, semua paket tampil langsung ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {paketEdukasiList.map((item) => (
-            <PaketCard key={item.id} item={item} />
-          ))}
-        </div>
-
-      </div>
-    </section>
+      <PaketEdukasiModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        item={selectedItem}
+      />
+    </>
   );
 }

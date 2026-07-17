@@ -10,6 +10,10 @@ export interface PaketEdukasi {
   harga: string;       // e.g. "Rp 750.000"
   gambar: string;      // path gambar
   tersedia?: boolean;
+  durasi?: string;     // durasi paket, e.g. "3 Hari"
+  fasilitas?: string;  // fasilitas, e.g. "Modul, Sertifikat, Konsultasi"
+  linkWa?: string;     // WhatsApp untuk pendaftaran
+  deskripsiLengkap?: string; // deskripsi paket lebih detail
 }
 
 /** Tipe data paket edukasi untuk admin CRUD */
