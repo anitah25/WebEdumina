@@ -10,6 +10,7 @@ export interface Berita {
   ringkasan?: string;
   kategori?: string; // e.g. "Budidaya", "Teknologi", "Wirausaha"
   slug: string;      // URL-friendly identifier
+  isi_konten?: string; // Full article content
 }
 
 /** Tipe data berita untuk admin CRUD */
