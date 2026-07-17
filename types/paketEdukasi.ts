@@ -11,3 +11,23 @@ export interface PaketEdukasi {
   gambar: string;      // path gambar
   tersedia?: boolean;
 }
+
+/** Tipe data paket edukasi untuk admin CRUD */
+export interface AdminPaketEdukasi {
+  id: number;
+  judul: string;
+  deskripsi_singkat: string;
+  deskripsi_lengkap: string;
+  harga: string; // or number?
+  durasi?: string;
+  fasilitas?: string;
+  gambar: string;
+  link_wa?: string;
+}
+
+export function formatHarga(harga: string | number): string {
+  if (typeof harga === 'number') {
+    return `Rp ${harga.toLocaleString('id-ID')}`;
+  }
+  return harga;
+}
