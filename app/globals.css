@@ -55,20 +55,12 @@
   --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* For dark mode we keep tokens but you can override if needed */
-    --bg-light: #0a0a0a;
-    --text-primary: #ededed;
-  }
-}
-
 /* Base styles */
 html, body {
   height: 100%;
 }
 body {
-  background: var(--bg-light);
+  background-color: #FFFFFF;
   color: var(--text-primary);
   font-family: var(--font-family-primary);
   -webkit-font-smoothing: antialiased;

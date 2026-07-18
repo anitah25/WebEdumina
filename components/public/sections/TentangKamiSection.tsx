@@ -7,7 +7,15 @@ const features = [
     img: "/tentangKami1.png",
     icon: (
       // Edukasi icon: book/screen with fish
-      <svg className="w-7 h-7 text-[var(--color-accent-darkgreen)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        className="w-7 h-7 text-[var(--color-accent-darkgreen)]"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <rect x="2" y="3" width="20" height="14" rx="2" />
         <path d="M8 21h8M12 17v4" />
         <path d="M7 10c1-2 3-2 4 0s3 2 4 0" />
@@ -20,7 +28,15 @@ const features = [
     img: "/tentangKami2.png",
     icon: (
       // Teknologi icon: wifi/iot signal
-      <svg className="w-7 h-7 text-[var(--color-accent-darkgreen)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        className="w-7 h-7 text-[var(--color-accent-darkgreen)]"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M5 12.55a11 11 0 0 1 14.08 0" />
         <path d="M1.42 9a16 16 0 0 1 21.16 0" />
         <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
@@ -34,7 +50,15 @@ const features = [
     img: "/tentangKami3.png",
     icon: (
       // Pemberdayaan icon: handshake
-      <svg className="w-7 h-7 text-[var(--color-accent-darkgreen)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        className="w-7 h-7 text-[var(--color-accent-darkgreen)]"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M9 11l3 3L22 4" />
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
       </svg>
@@ -52,16 +76,15 @@ export default function TentangKamiSection() {
     >
       <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-
           {/* ── Left: Text Content ── */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
+          <div className="lg:col-span-5 flex flex-col gap-6">
             {/* Label */}
             <span className="text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
               Tentang Kami
             </span>
 
             {/* Heading */}
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#111827] leading-tight">
+            <h2 className="text-3xl lg:text-4xl font-extrabold text-[#111827] leading-tight">
               Mengenal{" "}
               <span className="text-[var(--color-accent-darkgreen)]">
                 Study Center Edumina
@@ -77,60 +100,45 @@ export default function TentangKamiSection() {
             </p>
           </div>
 
-          {/* ── Right: Unified Feature Cards (image + overlapping white info box) ── */}
-          <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* ── Right: Modern Feature Cards ── */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-6">
             {features.map((f) => (
               <div
                 key={f.title}
-                className="relative overflow-hidden"
-                style={{ height: "342px" }}
+                className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 flex flex-col group h-full"
               >
-                {/* Photo — fills top portion of card */}
-                <div className="absolute top-0 left-0 w-full" style={{ height: "264px" }}>
+                {/* Photo container */}
+                <div className="relative aspect-[4/3] w-full overflow-hidden shrink-0 bg-slate-50">
                   <Image
                     src={f.img}
                     alt={f.title}
                     fill
-                    className="object-cover"
-                    style={{ borderRadius: "8px" }}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                     sizes="(max-width: 640px) 100vw, 33vw"
                   />
                 </div>
 
-                {/* White info box — overlaps bottom of image */}
-                <div
-                  className="absolute left-0 w-full bg-white flex items-start gap-4 px-4"
-                  style={{
-                    top: "206px",
-                    height: "131px",
-                    borderRadius: "8px",
-                    boxShadow: "2px 4px 4px rgba(0,0,0,0.25)",
-                    paddingTop: "21px",
-                  }}
-                >
-                  {/* Icon bubble */}
-                  <div
-                    className="flex-shrink-0 rounded-full bg-[var(--color-accent-lightgreen)]/25 flex items-center justify-center"
-                    style={{ width: "40px", height: "40px" }}
-                  >
-                    {f.icon}
+                {/* Card Content info */}
+                <div className="p-5 flex-1 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    {/* Icon bubble */}
+                    <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-lightgreen)]/20 flex items-center justify-center shrink-0">
+                      {f.icon}
+                    </div>
+                    <h3 className="font-extrabold text-slate-800 text-sm tracking-tight group-hover:text-[var(--color-accent-darkgreen)] transition-colors duration-200">
+                      {f.title}
+                    </h3>
                   </div>
 
-                  {/* Title + Description */}
-                  <div className="flex flex-col gap-1">
-                    <p className="font-semibold text-[#000] leading-snug" style={{ fontSize: "14px", fontFamily: "Poppins, sans-serif" }}>
-                      {f.title}
-                    </p>
-                    <p className="text-gray-600 leading-snug" style={{ fontSize: "12px", fontFamily: "Poppins, sans-serif" }}>
-                      {f.desc}
-                    </p>
-                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                    {f.desc}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-
-        </div>{/* end grid cols-12 */}
+        </div>
+        {/* end grid cols-12 */}
 
         {/* ── Visi & Misi ── */}
         <div className="mt-20 lg:mt-28">
@@ -143,41 +151,68 @@ export default function TentangKamiSection() {
               Visi &amp; Misi Kami
             </h3>
             <p className="text-gray-500 max-w-lg text-sm leading-relaxed">
-              Landasan semangat kami dalam membangun ekosistem budidaya lele yang
-              berdaya, berkelanjutan, dan bermanfaat bagi masyarakat luas.
+              Landasan semangat kami dalam membangun ekosistem budidaya lele
+              yang berdaya, berkelanjutan, dan bermanfaat bagi masyarakat luas.
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
             {/* ── Visi Card ── */}
             <div className="lg:col-span-4">
               <div
                 className="relative rounded-3xl overflow-hidden p-8 flex flex-col gap-6 h-full min-h-[280px]"
-                style={{ background: "linear-gradient(145deg, #1D2A62 0%, #263580 60%, #1a4a7a 100%)" }}
+                style={{
+                  background:
+                    "linear-gradient(145deg, #1D2A62 0%, #263580 60%, #1a4a7a 100%)",
+                }}
               >
                 {/* Decorative circle */}
-                <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10"
-                  style={{ background: "radial-gradient(circle, #AFD06E, transparent)" }} />
-                <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-10"
-                  style={{ background: "radial-gradient(circle, #87ADEC, transparent)" }} />
+                <div
+                  className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10"
+                  style={{
+                    background: "radial-gradient(circle, #AFD06E, transparent)",
+                  }}
+                />
+                <div
+                  className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-10"
+                  style={{
+                    background: "radial-gradient(circle, #87ADEC, transparent)",
+                  }}
+                />
 
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "rgba(175,208,110,0.2)" }}>
-                  <svg className="w-6 h-6 text-[#AFD06E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polygon points="10,8 16,12 10,16 10,8" fill="currentColor" stroke="none" />
-                  </svg>
+                {/* Header: Icon + Visi Title */}
+                <div className="flex items-center gap-3 relative z-10">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "rgba(175,208,110,0.2)" }}
+                  >
+                    <svg
+                      className="w-6 h-6 text-[#AFD06E]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polygon
+                        points="10,8 16,12 10,16 10,8"
+                        fill="currentColor"
+                        stroke="none"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-[#AFD06E] font-bold uppercase tracking-widest text-md">
+                    Visi
+                  </p>
                 </div>
 
                 {/* Content */}
-                <div className="relative z-10">
-                  <p className="text-[#AFD06E] font-bold uppercase tracking-widest text-xs mb-3">Visi</p>
+                <div className="relative z-10 flex-1">
                   <p className="text-white font-semibold text-base leading-relaxed">
-                    Menjadikan lele sebagai suatu produk perikanan yang dapat memberi{" "}
-                    <span className="text-[#AFD06E]">nilai tambah</span> bagi pembudidaya
-                    dan masyarakat.
+                    Menjadikan lele sebagai suatu produk perikanan yang dapat
+                    memberi nilai tambah bagi pembudidaya dan masyarakat.
                   </p>
                 </div>
               </div>
@@ -188,12 +223,22 @@ export default function TentangKamiSection() {
               <div className="bg-gray-50 rounded-3xl p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-dark)] flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M9 11l3 3L22 4" />
                       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                     </svg>
                   </div>
-                  <p className="text-[var(--color-primary-dark)] font-bold uppercase tracking-widest text-xs">Misi</p>
+                  <p className="text-[var(--color-primary-dark)] font-bold uppercase tracking-widest text-md">
+                    Misi
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
@@ -216,20 +261,22 @@ export default function TentangKamiSection() {
                       {/* Numbered bubble */}
                       <span
                         className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white mt-0.5"
-                        style={{ backgroundColor: "var(--color-accent-darkgreen)" }}
+                        style={{
+                          backgroundColor: "var(--color-accent-darkgreen)",
+                        }}
                       >
                         {i + 1}
                       </span>
-                      <p className="text-sm text-gray-700 leading-snug">{misi}</p>
+                      <p className="text-sm text-gray-700 leading-snug">
+                        {misi}
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
           </div>
         </div>
-
       </div>
     </section>
   );

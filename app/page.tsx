@@ -11,7 +11,7 @@ import Footer from "@/components/public/Footer";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 bg-bg-light pt-[72px]">
+    <div className="flex flex-col flex-1 bg-white pt-[72px]">
       <Navbar />
 
       <main className="flex-1 w-full">

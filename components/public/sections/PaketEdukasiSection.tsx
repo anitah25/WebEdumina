@@ -70,7 +70,7 @@ function PaketCard({
       >
         {/* Icon */}
         <div
-          className="absolute flex items-center justify-center rounded-full bg-[var(--color-accent-lightgreen)]/25"
+          className="absolute flex items-center justify-center rounded-full bg-(--color-accent-lightgreen)/40"
           style={{ top: "21px", left: "16px", width: "40px", height: "40px" }}
         >
           <EduIcon />
@@ -111,7 +111,7 @@ function PaketCard({
           style={{
             top: "95px",
             left: "16px",
-            backgroundColor: "#b6cf7b",
+            backgroundColor: "var(--color-accent-darkgreen)",
             padding: "3px 10px",
           }}
         >
