@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { produkList } from "@/data/content/produk";
 import type { Produk } from "@/types/produk";
+import ProdukModal from "../modals/ProdukModal";
 
 // ── Config ──────────────────────────────────────────────────
 const VISIBLE = 5; // items visible at a time on desktop
@@ -13,18 +14,24 @@ const VISIBLE = 5; // items visible at a time on desktop
 //   white circle 183×183px with box-shadow: 2px 4px 4px rgba(0,0,0,0.25)
 //   product image centered inside the circle
 //   name label centered below
-// function ProdukCard
-function ProdukCard({ item }: { item: Produk }) {
+function ProdukCard({
+  item,
+  onClick
+}: {
+  item: Produk;
+  onClick: () => void;
+}) {
   return (
-    <div className="flex flex-col items-center gap-3 flex-shrink-0">
+    <div className="flex flex-col items-center gap-3 flex-shrink-0 cursor-pointer group">
       {/* Circle */}
       <div
-        className="relative flex items-center justify-center bg-white rounded-full overflow-hidden flex-shrink-0"
+        className="relative flex items-center justify-center bg-white rounded-full overflow-hidden flex-shrink-0 transition-transform group-hover:scale-105 shadow-lg"
         style={{
           width: "183px",
           height: "183px",
           boxShadow: "2px 4px 4px rgba(0,0,0,0.25)",
         }}
+        onClick={onClick}
       >
         <Image
           src={item.gambar}
@@ -37,7 +44,7 @@ function ProdukCard({ item }: { item: Produk }) {
 
       {/* Name */}
       <p
-        className="text-[#000] text-center"
+        className="text-[#000] text-center group-hover:text-[#1D2A62] transition-colors"
         style={{ fontSize: "13px", fontFamily: "Poppins, sans-serif" }}
       >
         {item.nama}
@@ -66,6 +73,15 @@ export default function ProdukSection() {
 
   // Gap between cards in px
   const GAP = 20;
+  
+  // Modal state
+  const [selectedItem, setSelectedItem] = useState<Produk | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const handleCardClick = (item: Produk) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
 
   return (
     <section id="produk" className="w-full bg-white py-16 lg:py-20 overflow-hidden">
@@ -104,10 +120,45 @@ export default function ProdukSection() {
                 transform: `translateX(calc(-${current} * (183px + ${GAP}px)))`,
               }}
             >
-              {produkList.map((item) => (
-                <ProdukCard key={item.id} item={item} />
-              ))}
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Track */}
+            <div className="overflow-hidden">
+              <div
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{
+                  gap: `${GAP}px`,
+                  transform: `translateX(calc(-${current} * (183px + ${GAP}px)))`,
+                }}
+              >
+                {produkList.map((item) => (
+                  <ProdukCard
+                    key={item.id}
+                    item={item}
+                    onClick={() => handleCardClick(item)}
+                  />
+                ))}
+              </div>
             </div>
+
+            {/* Next button */}
+            <button
+              onClick={next}
+              disabled={current === maxIndex}
+              aria-label="Selanjutnya"
+              className="absolute right-0 top-[91px] translate-x-5 z-10
+                         w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
+                         flex items-center justify-center
+                         disabled:opacity-30 disabled:cursor-not-allowed
+                         hover:bg-[#263580] transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
 
           {/* Next button */}
@@ -125,23 +176,14 @@ export default function ProdukSection() {
           </button>
         </div>
 
-        {/* ── Dot indicators ── */}
-        <div className="flex items-center justify-center gap-2 mt-10">
-          {dots.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              aria-label={`Slide ${i + 1}`}
-              className={`rounded-full transition-all duration-300 ${
-                i === current
-                  ? "w-4 h-3 bg-[var(--color-primary-dark)]"
-                  : "w-3 h-3 bg-gray-300 hover:bg-gray-400"
-              }`}
-            />
-          ))}
         </div>
+      </section>
 
-      </div>
-    </section>
+      <ProdukModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        item={selectedItem}
+      />
+    </>
   );
 }

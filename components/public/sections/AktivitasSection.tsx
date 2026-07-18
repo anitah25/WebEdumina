@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { aktivitasList } from "@/data/content/aktivitas";
 import type { Aktivitas } from "@/types/aktivitas";
+import AktivitasModal from "../modals/AktivitasModal";
 
 // ── Config ──────────────────────────────────────────────────
 const VISIBLE = 4; // cards visible at a time on desktop
@@ -12,11 +13,18 @@ const VISIBLE = 4; // cards visible at a time on desktop
 // Matches the CSS from the design export:
 //   card height 296px, image 274px, gradient overlay from 137px,
 //   title at 227px left 13px, date at 258px left 13px
-function AktivitasCard({ item }: { item: Aktivitas }) {
+function AktivitasCard({
+  item,
+  onClick
+}: {
+  item: Aktivitas;
+  onClick: () => void;
+}) {
   return (
     <div
-      className="relative flex-shrink-0 overflow-hidden"
+      className="relative flex-shrink-0 overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform"
       style={{ height: "296px", width: "100%" }}
+      onClick={onClick}
     >
       {/* Image */}
       <Image
@@ -82,6 +90,10 @@ export default function AktivitasSection() {
   const maxIndex = Math.max(0, total - VISIBLE);
   const [current, setCurrent] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
+  
+  // Modal state
+  const [selectedItem, setSelectedItem] = useState<Aktivitas | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const prev = () => setCurrent((c) => (c === 0 ? maxIndex : c - 1));
   const next = () => setCurrent((c) => (c >= maxIndex ? 0 : c + 1));
@@ -96,90 +108,106 @@ export default function AktivitasSection() {
   // Dots: one per possible position
   const dots = Array.from({ length: maxIndex + 1 });
 
+  const handleCardClick = (item: Aktivitas) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
   return (
-    <section id="aktivitas" className="w-full bg-white py-16 lg:py-20 overflow-hidden">
-      <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
+    <>
+      <section id="aktivitas" className="w-full bg-white py-16 lg:py-20 overflow-hidden">
+        <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
 
-        {/* ── Header ── */}
-        <div className="mb-8">
-          <span className="text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
-            Aktivitas Kami
-          </span>
-        </div>
-
-        {/* ── Carousel wrapper ── */}
-        <div className="relative">
-
-          {/* Prev button */}
-          <button
-            onClick={prev}
-            disabled={current === 0}
-            aria-label="Sebelumnya"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10
-                       w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
-                       flex items-center justify-center
-                       disabled:opacity-30 disabled:cursor-not-allowed
-                       hover:bg-[#263580] transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Track */}
-          <div className="overflow-hidden">
-            <div
-              ref={trackRef}
-              className="flex gap-5 transition-transform duration-500 ease-in-out"
-              style={{
-                transform: `translateX(calc(-${current} * (100% / ${VISIBLE} + 5px / ${VISIBLE} * (${VISIBLE} - 1))))`,
-              }}
-            >
-              {aktivitasList.map((item) => (
-                <div
-                  key={item.id}
-                  style={{ minWidth: `calc((100% - ${(VISIBLE - 1) * 20}px) / ${VISIBLE})` }}
-                >
-                  <AktivitasCard item={item} />
-                </div>
-              ))}
-            </div>
+          {/* ── Header ── */}
+          <div className="mb-8">
+            <span className="text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
+              Aktivitas Kami
+            </span>
           </div>
 
-          {/* Next button */}
-          <button
-            onClick={next}
-            disabled={current === maxIndex}
-            aria-label="Selanjutnya"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10
-                       w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
-                       flex items-center justify-center
-                       disabled:opacity-30 disabled:cursor-not-allowed
-                       hover:bg-[#263580] transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+          {/* ── Carousel wrapper ── */}
+          <div className="relative">
 
-        {/* ── Dot indicators ── */}
-        <div className="flex items-center justify-center gap-2 mt-8">
-          {dots.map((_, i) => (
+            {/* Prev button */}
             <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              aria-label={`Slide ${i + 1}`}
-              className={`rounded-full transition-all duration-300 ${
-                i === current
-                  ? "w-4 h-3 bg-[var(--color-primary-dark)]"
-                  : "w-3 h-3 bg-gray-300 hover:bg-gray-400"
-              }`}
-            />
-          ))}
-        </div>
+              onClick={prev}
+              disabled={current === 0}
+              aria-label="Sebelumnya"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10
+                         w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
+                         flex items-center justify-center
+                         disabled:opacity-30 disabled:cursor-not-allowed
+                         hover:bg-[#263580] transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
 
-      </div>
-    </section>
+            {/* Track */}
+            <div className="overflow-hidden">
+              <div
+                ref={trackRef}
+                className="flex gap-5 transition-transform duration-500 ease-in-out"
+                style={{
+                  transform: `translateX(calc(-${current} * (100% / ${VISIBLE} + 5px / ${VISIBLE} * (${VISIBLE} - 1))))`,
+                }}
+              >
+                {aktivitasList.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{ minWidth: `calc((100% - ${(VISIBLE - 1) * 20}px) / ${VISIBLE})` }}
+                  >
+                    <AktivitasCard
+                      item={item}
+                      onClick={() => handleCardClick(item)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Next button */}
+            <button
+              onClick={next}
+              disabled={current === maxIndex}
+              aria-label="Selanjutnya"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10
+                         w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
+                         flex items-center justify-center
+                         disabled:opacity-30 disabled:cursor-not-allowed
+                         hover:bg-[#263580] transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* ── Dot indicators ── */}
+          <div className="flex items-center justify-center gap-2 mt-8">
+            {dots.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                aria-label={`Slide ${i + 1}`}
+                className={`rounded-full transition-all duration-300 ${
+                  i === current
+                    ? "w-4 h-3 bg-[var(--color-primary-dark)]"
+                    : "w-3 h-3 bg-gray-300 hover:bg-gray-400"
+                }`}
+              />
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      <AktivitasModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        item={selectedItem}
+      />
+    </>
   );
 }

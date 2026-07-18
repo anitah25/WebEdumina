@@ -21,11 +21,7 @@ const ALL_CATEGORIES = [
 // ── News Card (full page variant — vertical stack) ────────────
 function BeritaCardFull({ item }: { item: Berita }) {
   return (
-    <Link
-      href={`/berita/${item.slug}`}
-      className="group flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
-      style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}
-    >
+    <div className="group flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
       {/* Image */}
       <div className="relative w-full" style={{ height: "200px" }}>
         <Image
@@ -50,21 +46,23 @@ function BeritaCardFull({ item }: { item: Berita }) {
 
       {/* Content */}
       <div className="flex flex-col gap-3 p-5 flex-1">
-        <p
-          className="font-semibold text-[#111827] leading-snug line-clamp-3 group-hover:text-[var(--color-accent-darkgreen)] transition-colors"
-          style={{ fontSize: "15px", fontFamily: "Poppins, sans-serif" }}
-        >
-          {item.judul}
-        </p>
-
-        {item.ringkasan && (
+        <Link href={`/berita/${item.slug}`} className="block">
           <p
-            className="text-gray-500 leading-relaxed line-clamp-2"
-            style={{ fontSize: "13px", fontFamily: "Poppins, sans-serif" }}
+            className="font-semibold text-[#111827] leading-snug line-clamp-3 group-hover:text-[var(--color-accent-darkgreen)] transition-colors"
+            style={{ fontSize: "15px", fontFamily: "Poppins, sans-serif" }}
           >
-            {item.ringkasan}
+            {item.judul}
           </p>
-        )}
+
+          {item.ringkasan && (
+            <p
+              className="text-gray-500 leading-relaxed line-clamp-2"
+              style={{ fontSize: "13px", fontFamily: "Poppins, sans-serif" }}
+            >
+              {item.ringkasan}
+            </p>
+          )}
+        </Link>
 
         {/* Footer */}
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
@@ -78,32 +76,23 @@ function BeritaCardFull({ item }: { item: Berita }) {
           >
             {item.tanggal}
           </span>
-          <span
-            className="flex items-center gap-1 font-semibold group-hover:gap-2 transition-all"
+          <Link
+            href={`/berita/${item.slug}`}
+            className="flex items-center justify-center rounded-lg hover:bg-[var(--color-accent-lightgreen)]/10 transition-colors"
             style={{
+              border: "1px solid #b6cf7b",
+              padding: "3px 10px",
               fontSize: "13px",
               color: "#4c7026",
               fontFamily: "Poppins, sans-serif",
+              textDecoration: "none",
             }}
           >
-            Baca
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </span>
+            Baca &gt;
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
