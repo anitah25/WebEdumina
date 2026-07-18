@@ -5,7 +5,7 @@ import { useState } from "react";
 export default function ProfilePage() {
   // Mock administrative profile state
   const [profileName, setProfileName] = useState("Administrator");
-  const [profileEmail, setProfileEmail] = useState(
+  const [profileEmail] = useState(
     "admin@studycenteredumina.com",
   );
   const [profilePhone, setProfilePhone] = useState("0815639225");

@@ -5,16 +5,21 @@ import Link from "next/link";
 import {
   ActivityIcon,
   NewsIcon,
-  PackageIcon,
   ProductIcon,
-  UserIcon,
 } from "@/components/admin/Icons";
 
 export default function AdminDashboardPage() {
-  const [currentDate, setCurrentDate] = useState("Sabtu, 11 Juli 2026");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Dynamic date formatter in Indonesian locale
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  let currentDate = "Sabtu, 11 Juli 2026";
+  if (isMounted) {
     const options: Intl.DateTimeFormatOptions = {
       weekday: "long",
       day: "numeric",
@@ -23,12 +28,11 @@ export default function AdminDashboardPage() {
     };
     try {
       const today = new Date();
-      setCurrentDate(today.toLocaleDateString("id-ID", options));
-    } catch (e) {
-      // Fallback in case of locale error
-      setCurrentDate("Sabtu, 11 Juli 2026");
+      currentDate = today.toLocaleDateString("id-ID", options);
+    } catch {
+      // Fallback
     }
-  }, []);
+  }
 
   return (
     <div className="space-y-6 w-full">

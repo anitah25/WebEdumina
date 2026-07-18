@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { AdminPaketEdukasi } from "@/types/paketEdukasi";
 
 interface PaketFormModalProps {
@@ -16,6 +16,9 @@ export default function PaketFormModal({
   editingPaket,
   onSave,
 }: PaketFormModalProps) {
+  const [prevEditingPaket, setPrevEditingPaket] = useState<AdminPaketEdukasi | null>(null);
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+
   const [formData, setFormData] = useState<Omit<AdminPaketEdukasi, "id">>({
     judul: "",
     deskripsi_singkat: "",
@@ -27,7 +30,9 @@ export default function PaketFormModal({
     link_wa: "",
   });
 
-  useEffect(() => {
+  if (isOpen !== prevIsOpen || editingPaket !== prevEditingPaket) {
+    setPrevIsOpen(isOpen);
+    setPrevEditingPaket(editingPaket);
     if (isOpen) {
       if (editingPaket) {
         setFormData(editingPaket);
@@ -44,7 +49,7 @@ export default function PaketFormModal({
         });
       }
     }
-  }, [isOpen, editingPaket]);
+  }
 
   if (!isOpen) return null;
 
@@ -199,6 +204,7 @@ export default function PaketFormModal({
             <div className="flex items-center gap-4">
               {formData.gambar ? (
                 <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={formData.gambar} alt="Preview" className="w-full h-full object-cover" />
                   <button
                     type="button"

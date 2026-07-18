@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import UnsavedChangesModal from "./UnsavedChangesModal";
 
 interface Product {
@@ -24,6 +24,9 @@ export default function ProductFormModal({
   editingProduct,
   onSave,
 }: ProductFormModalProps) {
+  const [prevEditingProduct, setPrevEditingProduct] = useState<Product | null>(null);
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
   const [formImage, setFormImage] = useState("");
@@ -34,8 +37,9 @@ export default function ProductFormModal({
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Sync state with editing product when modal opens or editing product changes
-  useEffect(() => {
+  if (isOpen !== prevIsOpen || editingProduct !== prevEditingProduct) {
+    setPrevIsOpen(isOpen);
+    setPrevEditingProduct(editingProduct);
     if (isOpen) {
       let initName = "";
       let initDesc = "";
@@ -64,7 +68,7 @@ export default function ProductFormModal({
       setShowUnsavedConfirm(false);
       setValidationError(null);
     }
-  }, [isOpen, editingProduct]);
+  }
 
   if (!isOpen) return null;
 

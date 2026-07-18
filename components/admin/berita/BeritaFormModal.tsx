@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   BERITA_KATEGORI,
   generateSlug,
@@ -30,6 +30,9 @@ export default function BeritaFormModal({
   editingBerita,
   onSave,
 }: BeritaFormModalProps) {
+  const [prevEditingBerita, setPrevEditingBerita] = useState<AdminBerita | null>(null);
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+
   const [formJudul, setFormJudul] = useState("");
   const [formSlug, setFormSlug] = useState("");
   const [formIsiKonten, setFormIsiKonten] = useState("");
@@ -38,8 +41,11 @@ export default function BeritaFormModal({
   const [formRingkasan, setFormRingkasan] = useState("");
   const [formKategori, setFormKategori] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
+  const [isKategoriDropdownOpen, setIsKategoriDropdownOpen] = useState(false);
 
-  useEffect(() => {
+  if (isOpen !== prevIsOpen || editingBerita !== prevEditingBerita) {
+    setPrevIsOpen(isOpen);
+    setPrevEditingBerita(editingBerita);
     if (isOpen) {
       if (editingBerita) {
         setFormJudul(editingBerita.judul);
@@ -60,8 +66,9 @@ export default function BeritaFormModal({
         setFormKategori("");
         setSlugTouched(false);
       }
+      setIsKategoriDropdownOpen(false);
     }
-  }, [isOpen, editingBerita]);
+  }
 
   if (!isOpen) return null;
 
@@ -198,22 +205,64 @@ export default function BeritaFormModal({
               />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1 relative">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Kategori
               </label>
-              <select
-                value={formKategori}
-                onChange={(e) => setFormKategori(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition"
+              <button
+                type="button"
+                onClick={() => setIsKategoriDropdownOpen(!isKategoriDropdownOpen)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm text-left flex justify-between items-center focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition cursor-pointer"
               >
-                <option value="">Pilih kategori</option>
-                {BERITA_KATEGORI.map((kat) => (
-                  <option key={kat} value={kat}>
-                    {kat}
-                  </option>
-                ))}
-              </select>
+                <span>{formKategori || "Pilih kategori"}</span>
+                <svg
+                  className={`w-4 h-4 text-slate-500 transition-transform ${isKategoriDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+
+              {isKategoriDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsKategoriDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormKategori("");
+                        setIsKategoriDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-slate-400 hover:bg-slate-50 transition cursor-pointer"
+                    >
+                      Pilih kategori
+                    </button>
+                    {BERITA_KATEGORI.map((kat) => (
+                      <button
+                        key={kat}
+                        type="button"
+                        onClick={() => {
+                          setFormKategori(kat);
+                          setIsKategoriDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition cursor-pointer ${
+                          formKategori === kat
+                            ? "bg-[#1D2A62]/10 text-[#1D2A62] font-bold"
+                            : "text-slate-800 hover:bg-slate-100"
+                        }`}
+                      >
+                        {kat}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

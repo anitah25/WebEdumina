@@ -1,11 +1,13 @@
-export { colors } from "./colors";
-export { typography } from "./typography";
-export { spacing } from "./spacing";
-export { shadows } from "./shadows";
+import { colors } from "./colors";
+import { typography } from "./typography";
+import { spacing } from "./spacing";
+import { shadows } from "./shadows";
+
+export { colors, typography, spacing, shadows };
 
 export const tokens = {
-  colors: require("./colors").colors,
-  typography: require("./typography").typography,
-  spacing: require("./spacing").spacing,
-  shadows: require("./shadows").shadows,
+  colors,
+  typography,
+  spacing,
+  shadows,
 };

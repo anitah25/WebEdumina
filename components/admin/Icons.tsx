@@ -263,7 +263,7 @@ export const NewsIcon = (props: React.SVGProps<SVGSVGElement>) => (
     xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
-    <g clip-path="url(#clip0_122_22)">
+    <g clipPath="url(#clip0_122_22)">
       <path
         d="M10.6252 12.75H7.0835"
         stroke="currentColor"

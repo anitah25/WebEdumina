@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface Activity {
   id: number;
@@ -22,12 +22,16 @@ export default function ActivityFormModal({
   editingActivity,
   onSave,
 }: ActivityFormModalProps) {
+  const [prevEditingActivity, setPrevEditingActivity] = useState<Activity | null>(null);
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+
   const [formJudul, setFormJudul] = useState("");
   const [formTanggal, setFormTanggal] = useState("");
   const [formGambar, setFormGambar] = useState("");
 
-  // Sync state when modal is opened or target activity changes
-  useEffect(() => {
+  if (isOpen !== prevIsOpen || editingActivity !== prevEditingActivity) {
+    setPrevIsOpen(isOpen);
+    setPrevEditingActivity(editingActivity);
     if (isOpen) {
       if (editingActivity) {
         setFormJudul(editingActivity.judul);
@@ -41,7 +45,7 @@ export default function ActivityFormModal({
         setFormGambar("");
       }
     }
-  }, [isOpen, editingActivity]);
+  }
 
   if (!isOpen) return null;
 

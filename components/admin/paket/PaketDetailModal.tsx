@@ -47,6 +47,7 @@ export default function PaketDetailModal({
         <div className="p-6 space-y-6">
           {paket.gambar && (
             <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={paket.gambar}
                 alt={paket.judul}

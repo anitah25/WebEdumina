@@ -92,7 +92,7 @@ export default function AktivitasCRUDPage() {
         month: "long",
         year: "numeric",
       });
-    } catch (e) {
+    } catch {
       return dateStr;
     }
   };

@@ -176,10 +176,7 @@ export default function Navbar() {
             </Link>
           ) : (
             <Link
-              href="/admin"
-              onClick={() => {
-                localStorage.setItem("isLoggedIn", "true");
-              }}
+              href="/login"
               className="ml-4 inline-block rounded-full bg-[var(--button-secondary)] px-5 py-2 text-sm font-medium text-white shadow-[0_6px_12px_rgba(17,24,39,0.18)] hover:bg-[var(--button-primary)] transition-colors focus-visible:outline-none"
               aria-label="Login"
             >

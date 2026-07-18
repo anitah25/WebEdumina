@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const tokens = require('./config/theme/tokens');
 
 /** @type {import('tailwindcss').Config} */

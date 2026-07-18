@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { UserFormData, AdminUser } from "@/types/user";
 
 interface UserFormModalProps {
@@ -16,6 +16,11 @@ export default function UserFormModal({
   editingUser,
   onSave,
 }: UserFormModalProps) {
+  const [prevEditingUser, setPrevEditingUser] = useState<AdminUser | null>(null);
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
   const [formData, setFormData] = useState<UserFormData>({
     username: "",
     email: "",
@@ -25,7 +30,9 @@ export default function UserFormModal({
     password: "",
   });
 
-  useEffect(() => {
+  if (isOpen !== prevIsOpen || editingUser !== prevEditingUser) {
+    setPrevIsOpen(isOpen);
+    setPrevEditingUser(editingUser);
     if (isOpen) {
       if (editingUser) {
         setFormData({
@@ -46,8 +53,10 @@ export default function UserFormModal({
           password: "",
         });
       }
+      setIsRoleDropdownOpen(false);
+      setIsStatusDropdownOpen(false);
     }
-  }, [isOpen, editingUser]);
+  }
 
   if (!isOpen) return null;
 
@@ -169,44 +178,132 @@ export default function UserFormModal({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
+            <div className="space-y-1 relative">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Role <span className="text-red-500">*</span>
               </label>
-              <select
-                required
-                value={formData.role}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    role: e.target.value as "admin" | "operator",
-                  }))
-                }
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition"
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRoleDropdownOpen(!isRoleDropdownOpen);
+                  setIsStatusDropdownOpen(false);
+                }}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm text-left flex justify-between items-center focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition cursor-pointer"
               >
-                <option value="operator">Operator</option>
-                <option value="admin">Admin</option>
-              </select>
+                <span className="capitalize">{formData.role}</span>
+                <svg
+                  className={`w-4 h-4 text-slate-500 transition-transform ${isRoleDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+
+              {isRoleDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsRoleDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, role: "operator" }));
+                        setIsRoleDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition cursor-pointer ${
+                        formData.role === "operator"
+                          ? "bg-[#1D2A62]/10 text-[#1D2A62] font-bold"
+                          : "text-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      Operator
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, role: "admin" }));
+                        setIsRoleDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition cursor-pointer ${
+                        formData.role === "admin"
+                          ? "bg-[#1D2A62]/10 text-[#1D2A62] font-bold"
+                          : "text-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      Admin
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1 relative">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Status <span className="text-red-500">*</span>
               </label>
-              <select
-                required
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    status: e.target.value as "active" | "inactive",
-                  }))
-                }
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition"
+              <button
+                type="button"
+                onClick={() => {
+                  setIsStatusDropdownOpen(!isStatusDropdownOpen);
+                  setIsRoleDropdownOpen(false);
+                }}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm text-left flex justify-between items-center focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition cursor-pointer"
               >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+                <span className="capitalize">{formData.status}</span>
+                <svg
+                  className={`w-4 h-4 text-slate-500 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+
+              {isStatusDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsStatusDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, status: "active" }));
+                        setIsStatusDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition cursor-pointer ${
+                        formData.status === "active"
+                          ? "bg-[#1D2A62]/10 text-[#1D2A62] font-bold"
+                          : "text-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, status: "inactive" }));
+                        setIsStatusDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition cursor-pointer ${
+                        formData.status === "inactive"
+                          ? "bg-[#1D2A62]/10 text-[#1D2A62] font-bold"
+                          : "text-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      Inactive
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

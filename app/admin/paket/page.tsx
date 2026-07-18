@@ -263,6 +263,7 @@ export default function PaketAdminPage() {
             >
               <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                 {paket.gambar ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={paket.gambar}
                     alt={paket.judul}

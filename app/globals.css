@@ -74,3 +74,9 @@ body {
 .btn-primary { background-color: var(--button-primary); color: var(--text-light); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
 .btn-secondary { background-color: var(--button-secondary); color: var(--text-primary); border-radius: var(--radius-md); }
 
+/* Force dropdown select options to have dark text on a white background */
+select option {
+  color: #1e293b !important;
+  background-color: #ffffff !important;
+}
+

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { produkList } from "@/data/content/produk";
 import type { Produk } from "@/types/produk";
 import ProdukModal from "../modals/ProdukModal";
@@ -59,17 +59,15 @@ export default function ProdukSection() {
   const maxIndex = Math.max(0, total - VISIBLE);
   const [current, setCurrent] = useState(0);
 
-  const prev = () => setCurrent((c) => (c === 0 ? maxIndex : c - 1));
-  const next = () => setCurrent((c) => (c >= maxIndex ? 0 : c + 1));
+  const prev = useCallback(() => setCurrent((c) => (c === 0 ? maxIndex : c - 1)), [maxIndex]);
+  const next = useCallback(() => setCurrent((c) => (c >= maxIndex ? 0 : c + 1)), [maxIndex]);
 
   useEffect(() => {
     const timer = setInterval(() => {
       next();
     }, 4000); // auto-slide every 4 seconds
     return () => clearInterval(timer);
-  }, [current, maxIndex]);
-
-  const dots = Array.from({ length: maxIndex + 1 });
+  }, [next]);
 
   // Gap between cards in px
   const GAP = 20;
@@ -84,41 +82,28 @@ export default function ProdukSection() {
   };
 
   return (
-    <section id="produk" className="w-full bg-white py-16 lg:py-20 overflow-hidden">
-      <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
+    <>
+      <section id="produk" className="w-full bg-white py-16 lg:py-20 overflow-hidden">
+        <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
 
-        {/* ── Header — center aligned ── */}
-        <div className="mb-10 text-center">
-          <span className="text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
-            Produk Kami
-          </span>
-        </div>
+          {/* ── Header — center aligned ── */}
+          <div className="mb-10 text-center">
+            <span className="text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
+              Produk Kami
+            </span>
+          </div>
 
-        {/* ── Carousel wrapper ── */}
-        <div className="relative">
+          {/* ── Carousel wrapper ── */}
+          <div className="relative">
 
-          {/* Prev button */}
-          <button
-            onClick={prev}
-            aria-label="Sebelumnya"
-            className="absolute left-0 top-[91px] -translate-x-5 z-10
-                       w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
-                       flex items-center justify-center
-                       hover:bg-[#263580] transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Track */}
-          <div className="overflow-hidden">
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{
-                gap: `${GAP}px`,
-                transform: `translateX(calc(-${current} * (183px + ${GAP}px)))`,
-              }}
+            {/* Prev button */}
+            <button
+              onClick={prev}
+              aria-label="Sebelumnya"
+              className="absolute left-0 top-[91px] -translate-x-5 z-10
+                         w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
+                         flex items-center justify-center
+                         hover:bg-[#263580] transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -147,34 +132,18 @@ export default function ProdukSection() {
             {/* Next button */}
             <button
               onClick={next}
-              disabled={current === maxIndex}
               aria-label="Selanjutnya"
               className="absolute right-0 top-[91px] translate-x-5 z-10
                          w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
                          flex items-center justify-center
-                         disabled:opacity-30 disabled:cursor-not-allowed
                          hover:bg-[#263580] transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
-          </div>
 
-          {/* Next button */}
-          <button
-            onClick={next}
-            aria-label="Selanjutnya"
-            className="absolute right-0 top-[91px] translate-x-5 z-10
-                       w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
-                       flex items-center justify-center
-                       hover:bg-[#263580] transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+          </div>
 
         </div>
       </section>
