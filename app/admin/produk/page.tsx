@@ -6,6 +6,7 @@ import ProductFormModal from "@/components/admin/produk/ProductFormModal";
 import DeleteConfirmModal from "@/components/admin/produk/DeleteConfirmModal";
 import ProductDetailModal from "@/components/admin/produk/ProductDetailModal";
 import ImageLightboxModal from "@/components/admin/produk/ImageLightboxModal";
+import { apiRequest, getImageUrl, dataURLtoFile } from "@/lib/api";
 
 interface Product {
   id: number;
@@ -15,52 +16,8 @@ interface Product {
   link_wa: string;
 }
 
-// Initial mock products from PRD specification
-const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: 1,
-    nama_produk: "Benih Lele Grade A",
-    deskripsi:
-      "Benih lele Sangkuriang pilihan ukuran 5-7 cm. Tahan penyakit, pertumbuhan cepat, dan FCR rendah. Sangat cocok untuk budidaya kolam terpal maupun bioflok.",
-    gambar:
-      "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=600&q=80",
-    link_wa:
-      "https://wa.me/62815639225?text=Halo%20Admin%20Edumina,%20saya%20tertarik%20dengan%20produk%20Benih%20Lele%20Grade%20A.",
-  },
-  {
-    id: 2,
-    nama_produk: "Lele Konsumsi Segar",
-    deskripsi:
-      "Lele konsumsi ukuran isi 6-8 ekor per kg. Dipanen langsung dari kolam bersih terawat, jaminan segar, daging padat, tidak bau tanah.",
-    gambar:
-      "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80",
-    link_wa:
-      "https://wa.me/62815639225?text=Halo%20Admin%20Edumina,%20saya%20tertarik%20dengan%20produk%20Lele%20Konsumsi%20Segar.",
-  },
-  {
-    id: 3,
-    nama_produk: "Pakan Lele Booster-3",
-    deskripsi:
-      "Pakan pelet apung berkualitas tinggi dengan kandungan protein 32% untuk memaksimalkan pertumbuhan ikan lele pada fase pembesaran.",
-    gambar:
-      "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=600&q=80",
-    link_wa:
-      "https://wa.me/62815639225?text=Halo%20Admin%20Edumina,%20saya%20tertarik%20dengan%20produk%20Pakan%20Lele%20Booster-3.",
-  },
-  {
-    id: 4,
-    nama_produk: "Probiotik Air Bioflok",
-    deskripsi:
-      "Formula bakteri starter khusus untuk menstabilkan kualitas air kolam, menumbuhkan flok protein alami, dan menekan pertumbuhan patogen merugikan.",
-    gambar:
-      "https://images.unsplash.com/photo-1607619056574-7b8d304b3b86?auto=format&fit=crop&w=600&q=80",
-    link_wa:
-      "https://wa.me/62815639225?text=Halo%20Admin%20Edumina,%20saya%20tertarik%20dengan%20produk%20Probiotik%20Air%20Bioflok.",
-  },
-];
-
 export default function ProdukCRUDPage() {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modals visibility state
@@ -82,6 +39,22 @@ export default function ProdukCRUDPage() {
     message: string;
     type: "success" | "danger";
   } | null>(null);
+
+  // Fetch products from backend API
+  const fetchProducts = async () => {
+    try {
+      const response = await apiRequest("/api/produk?limit=100");
+      if (response.success && response.data) {
+        setProducts(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // Auto-clear notifications
   useEffect(() => {
@@ -134,71 +107,90 @@ export default function ProdukCRUDPage() {
   };
 
   // Save Product (Create / Update)
-  const handleSaveProduct = (
+  const handleSaveProduct = async (
     name: string,
     desc: string,
     image: string,
     wa: string,
   ) => {
-    // Standardize WhatsApp URL format
-    let cleanWaNum = wa.trim().replace(/[^\d+]/g, "");
-    if (!cleanWaNum.startsWith("+")) {
-      if (cleanWaNum.startsWith("0")) {
-        cleanWaNum = "+62" + cleanWaNum.slice(1);
-      } else if (cleanWaNum.startsWith("62") && !cleanWaNum.startsWith("+62")) {
-        cleanWaNum = "+" + cleanWaNum;
-      }
-    }
-    const cleanWaLink = `https://wa.me/${cleanWaNum.replace("+", "")}?text=Halo%20Admin%20Edumina,%20saya%20tertarik%20dengan%20produk%20${encodeURIComponent(name)}.`;
-
-    if (editingId !== null) {
-      // Update action
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingId
-            ? {
-                ...p,
-                nama_produk: name,
-                deskripsi: desc,
-                gambar: image,
-                link_wa: cleanWaLink,
-              }
-            : p,
-        ),
-      );
-      setNotification({
-        message: "Produk berhasil diperbarui!",
-        type: "success",
-      });
-    } else {
-      // Create action
-      const newProduct: Product = {
-        id: Date.now(),
-        nama_produk: name,
-        deskripsi: desc,
-        gambar: image,
-        link_wa: cleanWaLink,
-      };
-      setProducts((prev) => [newProduct, ...prev]);
-      setNotification({
-        message: "Produk baru berhasil ditambahkan!",
-        type: "success",
-      });
-    }
-
     setIsFormOpen(false);
+    try {
+      const formData = new FormData();
+      formData.append("nama_produk", name);
+      formData.append("deskripsi", desc);
+
+      // Clean WA input: backend expects raw WA number (it normalizes 0 -> 62 internally)
+      let cleanWa = wa.trim().replace(/[^\d]/g, "");
+      formData.append("link_wa", cleanWa);
+
+      // Convert base64 data URL from file uploader into binary File object
+      const file = dataURLtoFile(image, "product.png");
+      if (file) {
+        formData.append("gambar", file);
+      }
+
+      if (editingId !== null) {
+        // Update action
+        const response = await apiRequest(`/api/produk/${editingId}`, {
+          method: "PATCH",
+          body: formData,
+        });
+
+        if (response.success && response.data) {
+          setProducts((prev) =>
+            prev.map((p) => (p.id === editingId ? response.data : p))
+          );
+          setNotification({
+            message: "Produk berhasil diperbarui!",
+            type: "success",
+          });
+        }
+      } else {
+        // Create action
+        const response = await apiRequest("/api/produk", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.success && response.data) {
+          setProducts((prev) => [response.data, ...prev]);
+          setNotification({
+            message: "Produk baru berhasil ditambahkan!",
+            type: "success",
+          });
+        }
+      }
+    } catch (err: any) {
+      setNotification({
+        message: err.message || "Gagal menyimpan produk.",
+        type: "danger",
+      });
+    }
   };
 
   // Delete Action
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!productToDelete) return;
-    setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
-    setNotification({
-      message: `Produk "${productToDelete.nama_produk}" telah dihapus.`,
-      type: "danger",
-    });
-    setIsDeleteOpen(false);
-    setProductToDelete(null);
+    try {
+      const response = await apiRequest(`/api/produk/${productToDelete.id}`, {
+        method: "DELETE",
+      });
+      if (response.success) {
+        setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+        setNotification({
+          message: `Produk "${productToDelete.nama_produk}" telah dihapus.`,
+          type: "success",
+        });
+      }
+    } catch (err: any) {
+      setNotification({
+        message: err.message || "Gagal menghapus produk.",
+        type: "danger",
+      });
+    } finally {
+      setIsDeleteOpen(false);
+      setProductToDelete(null);
+    }
   };
 
   return (
@@ -254,17 +246,18 @@ export default function ProdukCRUDPage() {
             <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-[#ADD061]">
               <ProductIcon className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">Katalog Produk</h1>
+            <h1 className="text-xl font-bold tracking-tight">
+              Katalog Produk Lele
+            </h1>
           </div>
           <p className="text-sm text-white/70 mt-1">
-            Kelola katalog produk, detail deskripsi, dan link WhatsApp
-            pemesanan.
+            Kelola data lele konsumsi, benih lele unggul, pakan mandiri, dan produk olahan.
           </p>
         </div>
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 bg-(--color-accent-lightgreen) hover:bg-(--color-accent-lightgreen)/80 active:scale-95 text-(--color-primary-dark) px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center"
+          className="inline-flex items-center justify-center gap-2 bg-[#ADD061] hover:bg-[#ADD061]/80 active:scale-95 text-[#1D2A62] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
         >
           <svg
             className="w-4 h-4 shrink-0"
@@ -304,7 +297,7 @@ export default function ProdukCRUDPage() {
           </span>
           <input
             type="text"
-            placeholder="Cari produk berdasarkan nama atau deskripsi..."
+            placeholder="Cari produk berdasarkan nama..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition"
@@ -314,11 +307,11 @@ export default function ProdukCRUDPage() {
         {/* Counter Info */}
         <div className="text-xs text-slate-400 font-semibold flex gap-3">
           <span className="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200/50">
-            Total Katalog:{" "}
+            Total Produk:{" "}
             <b className="text-slate-800 font-bold">{products.length}</b>
           </span>
           {searchQuery && (
-            <span className="bg-[#EAF5D6] text-[#437118] px-3 py-1.5 rounded-lg border border-[#ADD061]/20">
+            <span className="bg-[#ADD061]/15 text-[#437118] px-3 py-1.5 rounded-lg border border-[#ADD061]/20">
               Hasil pencarian: <b>{filteredProducts.length}</b>
             </span>
           )}
@@ -339,11 +332,10 @@ export default function ProdukCRUDPage() {
                 {product.gambar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={product.gambar}
+                    src={getImageUrl(product.gambar)}
                     alt={product.nama_produk}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => {
-                      // Fallback to standard data SVG image in case of load failure
                       (e.target as HTMLImageElement).src =
                         "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23D0E6FD'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%231D2A62'>No Image Available</text></svg>";
                     }}
@@ -389,7 +381,7 @@ export default function ProdukCRUDPage() {
                 <div className="pt-2 border-t border-slate-100 space-y-3">
                   {/* WhatsApp click tester */}
                   <a
-                    href={product.link_wa}
+                    href={product.link_wa?.startsWith("http") ? product.link_wa : `https://wa.me/${product.link_wa}`}
                     onClick={(e) => e.stopPropagation()}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -476,7 +468,7 @@ export default function ProdukCRUDPage() {
             </svg>
           </div>
           <h3 className="font-extrabold text-slate-700 text-lg">
-            Tidak ada hasil ditemukan
+            Tidak ada produk ditemukan
           </h3>
           <p className="text-slate-400 text-sm max-w-sm mx-auto">
             Tidak ada produk yang sesuai dengan pencarian Anda. Coba kata kunci
@@ -491,7 +483,14 @@ export default function ProdukCRUDPage() {
         onClose={() => setIsFormOpen(false)}
         editingProduct={
           editingId !== null
-            ? products.find((p) => p.id === editingId) || null
+            ? (() => {
+                const prod = products.find((p) => p.id === editingId);
+                if (!prod) return null;
+                return {
+                  ...prod,
+                  gambar: getImageUrl(prod.gambar),
+                };
+              })()
             : null
         }
         onSave={handleSaveProduct}
@@ -507,7 +506,14 @@ export default function ProdukCRUDPage() {
       <ProductDetailModal
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
-        product={selectedDetailProduct}
+        product={
+          selectedDetailProduct
+            ? {
+                ...selectedDetailProduct,
+                gambar: getImageUrl(selectedDetailProduct.gambar),
+              }
+            : null
+        }
         onImageClick={(url) =>
           handleOpenLightbox(url, selectedDetailProduct?.nama_produk || "")
         }

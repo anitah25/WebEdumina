@@ -1,101 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { NewsIcon } from "@/components/admin/Icons";
-import BeritaFormModal, {
-  type BeritaFormData,
-} from "@/components/admin/berita/BeritaFormModal";
+import BeritaFormModal from "@/components/admin/berita/BeritaFormModal";
 import BeritaDetailModal from "@/components/admin/berita/BeritaDetailModal";
 import DeleteConfirmModal from "@/components/admin/berita/DeleteConfirmModal";
-import {
-  formatTanggalBerita,
-  generateSlug,
-  type AdminBerita,
-} from "@/types/berita";
+import type { AdminBerita, BeritaFormData } from "@/types/berita";
+import { formatTanggalBerita } from "@/types/berita";
+import { apiRequest, getImageUrl, dataURLtoFile } from "@/lib/api";
 
-const INITIAL_BERITA: AdminBerita[] = [
-  {
-    id: 1,
-    slug: "geliat-ekonomi-warga-pasar-wirausaha-lele",
-    judul:
-      "Geliat Ekonomi Warga, Pasar Wirausaha Lele Sukses Dorong Kemandirian Pangan Lokal",
-    tanggal_publish: "2026-07-11",
-    gambar: "/tentangKami3.png",
-    ringkasan:
-      "Kelompok budidaya Mina Lancar berhasil menggelar pasar wirausaha lele yang dihadiri ratusan warga Kecamatan Gunungpati.",
-    kategori: "Wirausaha",
-    isi_konten:
-      "Kelompok budidaya Mina Lancar berhasil menggelar pasar wirausaha lele yang dihadiri ratusan warga Kecamatan Gunungpati. Acara ini menjadi bukti nyata bahwa budidaya lele mampu menggerakkan ekonomi lokal dan mendukung kemandirian pangan di wilayah Gunungpati.",
-  },
-  {
-    id: 2,
-    slug: "inovasi-iot-monitoring-kolam-lele",
-    judul:
-      "Inovasi IoT untuk Monitoring Kualitas Air Kolam Lele Secara Real-Time",
-    tanggal_publish: "2026-07-05",
-    gambar: "/tentangKami2.png",
-    ringkasan:
-      "Study Center Edumina mulai menerapkan sensor IoT untuk pemantauan kualitas air kolam secara otomatis dan akurat.",
-    kategori: "Teknologi",
-    isi_konten:
-      "Study Center Edumina mulai menerapkan sensor IoT untuk pemantauan kualitas air kolam secara otomatis dan akurat. Teknologi ini membantu pembudidaya memantau parameter air seperti suhu, pH, dan oksigen terlarut melalui smartphone.",
-  },
-  {
-    id: 3,
-    slug: "pelatihan-pembibitan-lele-unggul",
-    judul:
-      "Pelatihan Pembibitan Lele Unggul Diikuti 50 Peserta dari Berbagai Daerah",
-    tanggal_publish: "2026-06-28",
-    gambar: "/tentangKami1.png",
-    ringkasan:
-      "Antusiasme peserta dari luar kota membuat pelatihan perdana pembibitan lele menjadi penuh dan sukses besar.",
-    kategori: "Budidaya",
-    isi_konten:
-      "Pelatihan pembibitan lele unggul di Study Center Edumina diikuti 50 peserta dari berbagai daerah. Peserta mendapatkan materi praktik langsung mulai dari pemilihan induk, perawatan telur, hingga penanganan benih berkualitas.",
-  },
-  {
-    id: 4,
-    slug: "kampung-siroto-sentral-lele-semarang",
-    judul:
-      "Kampung Siroto Menuju Sentral Lele Kota Semarang, Ini Langkah Nyatanya",
-    tanggal_publish: "2026-06-20",
-    gambar: "/tentangKami3.png",
-    ringkasan:
-      "Pemkot Semarang mendukung program pengembangan Kampung Siroto sebagai pusat produksi dan edukasi budidaya lele.",
-    kategori: "Wirausaha",
-    isi_konten:
-      "Pemerintah Kota Semarang mendukung program pengembangan Kampung Siroto sebagai pusat produksi dan edukasi budidaya lele. Langkah ini mencakup pembangunan infrastruktur, pelatihan warga, dan pemasaran produk olahan lele.",
-  },
-  {
-    id: 5,
-    slug: "abon-lele-tembus-pasar-modern",
-    judul:
-      "Produk Olahan Abon Lele Study Center Edumina Tembus Pasar Modern",
-    tanggal_publish: "2026-06-14",
-    gambar: "/tentangKami2.png",
-    ringkasan:
-      "Setelah melalui uji kelayakan, abon lele produksi kelompok Mina Lancar kini tersedia di beberapa supermarket di Semarang.",
-    kategori: "Produk",
-    isi_konten:
-      "Setelah melalui uji kelayakan, abon lele produksi kelompok Mina Lancar kini tersedia di beberapa supermarket di Semarang. Produk ini menjadi bukti bahwa olahan lele lokal mampu bersaing di pasar modern.",
-  },
-  {
-    id: 6,
-    slug: "panen-raya-lele-mina-lancar",
-    judul:
-      "Panen Raya Lele Mina Lancar, 2 Ton Lele Siap Distribusi dalam Satu Hari",
-    tanggal_publish: "2026-06-01",
-    gambar: "/tentangKami1.png",
-    ringkasan:
-      "Panen raya yang melibatkan seluruh anggota kelompok menghasilkan 2 ton lebih lele siap konsumsi dan distribusi.",
-    kategori: "Budidaya",
-    isi_konten:
-      "Panen raya yang melibatkan seluruh anggota kelompok Mina Lancar menghasilkan lebih dari 2 ton lele siap konsumsi dan distribusi dalam satu hari. Kegiatan ini menjadi momentum penting bagi Study Center Edumina.",
-  },
-];
+const getMockCategory = (title: string): string => {
+  const lower = title.toLowerCase();
+  if (lower.includes("bioflok") || lower.includes("lele") || lower.includes("pakan") || lower.includes("panen")) return "Budidaya";
+  if (lower.includes("pelatihan") || lower.includes("studi") || lower.includes("edukasi") || lower.includes("workshop") || lower.includes("kunjungan")) return "Edukasi";
+  if (lower.includes("umkm") || lower.includes("penghargaan") || lower.includes("wirausaha") || lower.includes("bisnis") || lower.includes("raih")) return "Wirausaha";
+  return "Teknologi";
+};
+
+const getSummary = (content?: string, maxLength = 100) => {
+  if (!content) return "Klik untuk membaca selengkapnya.";
+  if (content.length <= maxLength) return content;
+  return content.slice(0, maxLength) + "...";
+};
 
 export default function BeritaAdminPage() {
-  const [beritaList, setBeritaList] = useState<AdminBerita[]>(INITIAL_BERITA);
+  const [beritaList, setBeritaList] = useState<AdminBerita[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -113,6 +42,27 @@ export default function BeritaAdminPage() {
     message: string;
     type: "success" | "danger";
   } | null>(null);
+
+  // Fetch news list from API
+  const fetchBeritaList = async () => {
+    try {
+      const response = await apiRequest("/api/berita?limit=100");
+      if (response.success && response.data) {
+        const mapped = response.data.map((item: any) => ({
+          ...item,
+          kategori: getMockCategory(item.judul),
+          ringkasan: getSummary(item.isi_konten),
+        }));
+        setBeritaList(mapped);
+      }
+    } catch (err) {
+      console.error("Failed to fetch berita list:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBeritaList();
+  }, []);
 
   useEffect(() => {
     if (notification) {
@@ -158,60 +108,92 @@ export default function BeritaAdminPage() {
     setIsDetailOpen(true);
   };
 
-  const handleSaveBerita = (data: BeritaFormData) => {
-    const slug = data.slug || generateSlug(data.judul);
+  const handleSaveBerita = async (data: BeritaFormData) => {
+    setIsFormOpen(false);
+    try {
+      const formData = new FormData();
+      formData.append("judul", data.judul);
+      formData.append("slug", data.slug || "");
+      formData.append("isi_konten", data.isi_konten || "");
+      formData.append("tanggal_publish", data.tanggal_publish || "");
 
-    if (editingId !== null) {
-      setBeritaList((prev) =>
-        prev.map((b) =>
-          b.id === editingId
-            ? {
-                ...b,
-                judul: data.judul,
-                slug,
-                isi_konten: data.isi_konten,
-                tanggal_publish: data.tanggal_publish,
-                gambar: data.gambar,
-                ringkasan: data.ringkasan || undefined,
-                kategori: data.kategori || undefined,
-              }
-            : b,
-        ),
-      );
+      const file = dataURLtoFile(data.gambar, "berita.png");
+      if (file) {
+        formData.append("gambar", file);
+      }
+
+      if (editingId !== null) {
+        // Update action
+        const response = await apiRequest(`/api/berita/${editingId}`, {
+          method: "PATCH",
+          body: formData,
+        });
+        if (response.success && response.data) {
+          setBeritaList((prev) =>
+            prev.map((b) =>
+              b.id === editingId
+                ? {
+                    ...response.data,
+                    kategori: getMockCategory(response.data.judul),
+                    ringkasan: getSummary(response.data.isi_konten),
+                  }
+                : b
+            )
+          );
+          setNotification({
+            message: "Berita berhasil diperbarui!",
+            type: "success",
+          });
+        }
+      } else {
+        // Create action
+        const response = await apiRequest("/api/berita", {
+          method: "POST",
+          body: formData,
+        });
+        if (response.success && response.data) {
+          const newB = {
+            ...response.data,
+            kategori: getMockCategory(response.data.judul),
+            ringkasan: getSummary(response.data.isi_konten),
+          };
+          setBeritaList((prev) => [newB, ...prev]);
+          setNotification({
+            message: "Berita baru berhasil dipublikasikan!",
+            type: "success",
+          });
+        }
+      }
+    } catch (err: any) {
       setNotification({
-        message: "Berita berhasil diperbarui!",
-        type: "success",
-      });
-    } else {
-      const newBerita: AdminBerita = {
-        id: Date.now(),
-        judul: data.judul,
-        slug,
-        isi_konten: data.isi_konten,
-        tanggal_publish: data.tanggal_publish,
-        gambar: data.gambar,
-        ringkasan: data.ringkasan || undefined,
-        kategori: data.kategori || undefined,
-      };
-      setBeritaList((prev) => [newBerita, ...prev]);
-      setNotification({
-        message: "Berita baru berhasil dipublikasikan!",
-        type: "success",
+        message: err.message || "Gagal menyimpan berita.",
+        type: "danger",
       });
     }
-
-    setIsFormOpen(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!beritaToDelete) return;
-    setBeritaList((prev) => prev.filter((b) => b.id !== beritaToDelete.id));
-    setNotification({
-      message: `Berita "${beritaToDelete.judul}" telah dihapus.`,
-      type: "danger",
-    });
-    setIsDeleteOpen(false);
-    setBeritaToDelete(null);
+    try {
+      const response = await apiRequest(`/api/berita/${beritaToDelete.id}`, {
+        method: "DELETE",
+      });
+      if (response.success) {
+        setBeritaList((prev) => prev.filter((b) => b.id !== beritaToDelete.id));
+        setNotification({
+          message: `Berita "${beritaToDelete.judul}" telah dihapus.`,
+          type: "success",
+        });
+      }
+    } catch (err: any) {
+      setNotification({
+        message: err.message || "Gagal menghapus berita.",
+        type: "danger",
+      });
+    } finally {
+      setIsDeleteOpen(false);
+      setBeritaToDelete(null);
+    }
   };
 
   return (
@@ -259,7 +241,7 @@ export default function BeritaAdminPage() {
         </div>
       )}
 
-      {/* Page Header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-[#1D2A62] to-[#121B40] p-6 rounded-3xl text-white shadow-md">
         <div>
           <div className="flex items-center gap-2">
@@ -269,13 +251,13 @@ export default function BeritaAdminPage() {
             <h1 className="text-xl font-bold tracking-tight">Manajemen Berita</h1>
           </div>
           <p className="text-sm text-white/70 mt-1">
-            Kelola artikel berita yang ditampilkan di landing page pengunjung.
+            Publikasikan pengumuman, tips budidaya lele, dan kegiatan edukasi Edumina.
           </p>
         </div>
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 bg-(--color-accent-lightgreen) hover:bg-(--color-accent-lightgreen)/80 active:scale-95 text-(--color-primary-dark) px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 bg-[#ADD061] hover:bg-[#ADD061]/80 active:scale-95 text-[#1D2A62] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
         >
           <svg
             className="w-4 h-4 shrink-0"
@@ -290,11 +272,10 @@ export default function BeritaAdminPage() {
               d="M12 4.5v15m7.5-7.5h-15"
             />
           </svg>
-          Tambah Berita
+          Tulis Berita
         </button>
       </div>
 
-      {/* Search & Stats */}
       <div className="bg-white p-4 rounded-2xl border border-white/40 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:max-w-md">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -346,7 +327,7 @@ export default function BeritaAdminPage() {
                 {berita.gambar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={berita.gambar}
+                    src={getImageUrl(berita.gambar)}
                     alt={berita.judul}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => {
@@ -486,12 +467,20 @@ export default function BeritaAdminPage() {
         </div>
       )}
 
+      {/* Modals */}
       <BeritaFormModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         editingBerita={
           editingId !== null
-            ? beritaList.find((b) => b.id === editingId) || null
+            ? (() => {
+                const b = beritaList.find((x) => x.id === editingId);
+                if (!b) return null;
+                return {
+                  ...b,
+                  gambar: getImageUrl(b.gambar),
+                };
+              })()
             : null
         }
         onSave={handleSaveBerita}
@@ -500,7 +489,14 @@ export default function BeritaAdminPage() {
       <BeritaDetailModal
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
-        berita={selectedDetailBerita}
+        berita={
+          selectedDetailBerita
+            ? {
+                ...selectedDetailBerita,
+                gambar: getImageUrl(selectedDetailBerita.gambar),
+              }
+            : null
+        }
       />
 
       <DeleteConfirmModal

@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import { apiRequest } from "@/lib/api";
 
 const pageLabels: Record<string, string> = {
   aktivitas: "Aktivitas",
@@ -31,6 +32,19 @@ export default function Header() {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<{ nama_lengkap: string; role: string } | null>(null);
+
+  // Load user profile details on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -83,13 +97,17 @@ export default function Header() {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-3 text-left focus:outline-none hover:bg-slate-50 px-3 py-1.5 rounded-2xl transition duration-150 cursor-pointer active:scale-98"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-sm font-semibold text-white">
-              A
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1D2A62] text-sm font-bold text-white uppercase">
+              {user?.nama_lengkap ? user.nama_lengkap.charAt(0) : "A"}
             </div>
 
             <div className="leading-tight">
-              <p className="text-[15px] font-semibold text-slate-900">Admin</p>
-              <p className="text-sm text-slate-500">Super Admin</p>
+              <p className="text-[15px] font-semibold text-slate-900 capitalize">
+                {user?.nama_lengkap || "Admin"}
+              </p>
+              <p className="text-sm text-slate-500 capitalize">
+                {user?.role || "Operator"}
+              </p>
             </div>
 
             <svg
@@ -123,10 +141,17 @@ export default function Header() {
               </Link>
               <div className="border-t border-slate-100 my-1" />
               <button
-                onClick={() => {
+                onClick={async () => {
                   setIsDropdownOpen(false);
-                  console.log("Logout triggered");
+                  try {
+                    await apiRequest("/api/auth/logout", { method: "POST" });
+                  } catch (e) {
+                    // Ignore network error on logout
+                  }
                   localStorage.removeItem("isLoggedIn");
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("userRole");
+                  localStorage.removeItem("user");
                   window.location.href = "/";
                 }}
                 className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold text-left transition-colors cursor-pointer"

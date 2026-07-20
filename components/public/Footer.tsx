@@ -117,7 +117,7 @@ export default function Footer() {
               >
                 Mitra Kami
               </p>
-              <div className="bg-white rounded-2xl px-5 py-3 flex items-center justify-center">
+              <div className="flex items-center">
                 <Image
                   src="/logoMitra.png"
                   alt="Logo Mitra Study Center Edumina"

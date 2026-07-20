@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ActivityIcon } from "@/components/admin/Icons";
 import ActivityFormModal from "@/components/admin/aktivitas/ActivityFormModal";
 import DeleteConfirmModal from "@/components/admin/aktivitas/DeleteConfirmModal";
+import { apiRequest, getImageUrl, dataURLtoFile } from "@/lib/api";
 
 interface Activity {
   id: number;
@@ -12,40 +13,8 @@ interface Activity {
   gambar: string;
 }
 
-// Initial mock activities from PRD specification (sorted DESC by date)
-const INITIAL_ACTIVITIES: Activity[] = [
-  {
-    id: 1,
-    judul: "Penyuluhan Bioflok dengan Warga Kampung Siroto",
-    tanggal: "2026-07-15",
-    gambar:
-      "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 2,
-    judul: "Panen Perdana Kolam Lele Pembesaran Edumina",
-    tanggal: "2026-07-10",
-    gambar:
-      "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 3,
-    judul: "Kunjungan Studi Banding Mahasiswa FPIK UNDIP",
-    tanggal: "2026-07-05",
-    gambar:
-      "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 4,
-    judul: "Pelatihan Pembuatan Pakan Mandiri Protein Tinggi",
-    tanggal: "2026-06-28",
-    gambar:
-      "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=600&q=80",
-  },
-];
-
 export default function AktivitasCRUDPage() {
-  const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modals visibility state
@@ -63,6 +32,22 @@ export default function AktivitasCRUDPage() {
     message: string;
     type: "success" | "danger";
   } | null>(null);
+
+  // Fetch activities from backend API
+  const fetchActivities = async () => {
+    try {
+      const response = await apiRequest("/api/aktivitas?limit=100");
+      if (response.success && response.data) {
+        setActivities(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch activities:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
 
   // Auto-clear notifications
   useEffect(() => {
@@ -116,50 +101,85 @@ export default function AktivitasCRUDPage() {
   };
 
   // Save Activity (Create / Update)
-  const handleSaveActivity = (
+  const handleSaveActivity = async (
     judul: string,
     tanggal: string,
     gambar: string,
   ) => {
-    if (editingId !== null) {
-      // Update action
-      setActivities((prev) =>
-        prev.map((a) =>
-          a.id === editingId ? { ...a, judul, tanggal, gambar } : a,
-        ),
-      );
+    setIsFormOpen(false);
+    try {
+      const formData = new FormData();
+      formData.append("judul", judul);
+      formData.append("tanggal", tanggal);
+
+      // Convert base64 data URL from file uploader into binary File object
+      const file = dataURLtoFile(gambar, "activity.png");
+      if (file) {
+        formData.append("gambar", file);
+      }
+
+      if (editingId !== null) {
+        // Update action
+        const response = await apiRequest(`/api/aktivitas/${editingId}`, {
+          method: "PATCH",
+          body: formData,
+        });
+
+        if (response.success && response.data) {
+          setActivities((prev) =>
+            prev.map((a) => (a.id === editingId ? response.data : a))
+          );
+          setNotification({
+            message: "Aktivitas berhasil diperbarui!",
+            type: "success",
+          });
+        }
+      } else {
+        // Create action
+        const response = await apiRequest("/api/aktivitas", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.success && response.data) {
+          setActivities((prev) => [response.data, ...prev]);
+          setNotification({
+            message: "Aktivitas baru berhasil didokumentasikan!",
+            type: "success",
+          });
+        }
+      }
+    } catch (err: any) {
       setNotification({
-        message: "Aktivitas berhasil diperbarui!",
-        type: "success",
-      });
-    } else {
-      // Create action
-      const newActivity: Activity = {
-        id: Date.now(),
-        judul,
-        tanggal,
-        gambar,
-      };
-      setActivities((prev) => [newActivity, ...prev]);
-      setNotification({
-        message: "Aktivitas baru berhasil didokumentasikan!",
-        type: "success",
+        message: err.message || "Gagal menyimpan aktivitas.",
+        type: "danger",
       });
     }
-
-    setIsFormOpen(false);
   };
 
   // Delete Action
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!activityToDelete) return;
-    setActivities((prev) => prev.filter((a) => a.id !== activityToDelete.id));
-    setNotification({
-      message: `Aktivitas "${activityToDelete.judul}" telah dihapus.`,
-      type: "danger",
-    });
-    setIsDeleteOpen(false);
-    setActivityToDelete(null);
+    try {
+      const response = await apiRequest(`/api/aktivitas/${activityToDelete.id}`, {
+        method: "DELETE",
+      });
+      if (response.success) {
+        setActivities((prev) => prev.filter((a) => a.id !== activityToDelete.id));
+        setNotification({
+          message: `Aktivitas "${activityToDelete.judul}" telah dihapus.`,
+          type: "success",
+        });
+      }
+    } catch (err: any) {
+      setNotification({
+        message: err.message || "Gagal menghapus aktivitas.",
+        type: "danger",
+      });
+    } finally {
+      setIsDeleteOpen(false);
+      setActivityToDelete(null);
+    }
   };
 
   return (
@@ -227,7 +247,7 @@ export default function AktivitasCRUDPage() {
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 bg-(--color-accent-lightgreen) hover:bg-(--color-accent-lightgreen)/80 active:scale-95 text-(--color-primary-dark) px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 bg-[#ADD061] hover:bg-[#ADD061]/80 active:scale-95 text-[#1D2A62] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
         >
           <svg
             className="w-4 h-4 shrink-0"
@@ -301,7 +321,7 @@ export default function AktivitasCRUDPage() {
                 {activity.gambar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={activity.gambar}
+                    src={getImageUrl(activity.gambar)}
                     alt={activity.judul}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => {
@@ -419,7 +439,14 @@ export default function AktivitasCRUDPage() {
         onClose={() => setIsFormOpen(false)}
         editingActivity={
           editingId !== null
-            ? activities.find((a) => a.id === editingId) || null
+            ? (() => {
+                const act = activities.find((a) => a.id === editingId);
+                if (!act) return null;
+                return {
+                  ...act,
+                  gambar: getImageUrl(act.gambar),
+                };
+              })()
             : null
         }
         onSave={handleSaveActivity}

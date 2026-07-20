@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { paketEdukasiList } from "@/data/content/paketEdukasi";
+import { useState, useEffect } from "react";
 import type { PaketEdukasi } from "@/types/paketEdukasi";
+import { formatHarga } from "@/types/paketEdukasi";
 import PaketEdukasiModal from "../modals/PaketEdukasiModal";
+import { apiRequest, getImageUrl } from "@/lib/api";
 
-// ── Icon: training/education ─────────────────────────────────
 function EduIcon() {
   return (
     <svg
@@ -25,11 +25,6 @@ function EduIcon() {
   );
 }
 
-// ── Paket Edukasi Card ────────────────────────────────────────
-// Same overlay style as TentangKami cards (CSS export):
-//   card 342px tall, image 264px, white box overlaps at 206px
-//   icon at 227px left-16, title+desc right of icon,
-//   price badge + selengkapnya button at bottom row (299-301px)
 function PaketCard({
   item,
   onClick
@@ -49,7 +44,7 @@ function PaketCard({
       {/* Image */}
       <div className="absolute top-0 left-0 w-full" style={{ height: "264px" }}>
         <Image
-          src={item.gambar}
+          src={getImageUrl(item.gambar)}
           alt={item.nama}
           fill
           className="object-cover"
@@ -58,7 +53,7 @@ function PaketCard({
         />
       </div>
 
-      {/* White overlay box — overlaps bottom of image */}
+      {/* White overlay box */}
       <div
         className="absolute left-0 w-full bg-white"
         style={{
@@ -70,7 +65,7 @@ function PaketCard({
       >
         {/* Icon */}
         <div
-          className="absolute flex items-center justify-center rounded-full bg-(--color-accent-lightgreen)/40"
+          className="absolute flex items-center justify-center rounded-full bg-[#ADD061]/40"
           style={{ top: "21px", left: "16px", width: "40px", height: "40px" }}
         >
           <EduIcon />
@@ -78,7 +73,7 @@ function PaketCard({
 
         {/* Title */}
         <p
-          className="absolute text-black font-semibold leading-snug"
+          className="absolute text-black font-semibold leading-snug line-clamp-1"
           style={{
             top: "21px",
             left: "68px",
@@ -92,7 +87,7 @@ function PaketCard({
 
         {/* Description */}
         <p
-          className="absolute text-gray-500 leading-snug"
+          className="absolute text-gray-500 leading-snug line-clamp-2"
           style={{
             top: "46px",
             left: "68px",
@@ -104,7 +99,6 @@ function PaketCard({
           {item.deskripsi}
         </p>
 
-        {/* ── Bottom row: Price badge + Selengkapnya button ── */}
         {/* Price badge */}
         <div
           className="absolute flex items-center justify-center rounded-xl"
@@ -145,11 +139,35 @@ function PaketCard({
   );
 }
 
-// ── Main Section ─────────────────────────────────────────────
 export default function PaketEdukasiSection() {
-  // Modal state
+  const [paketList, setPaketList] = useState<PaketEdukasi[]>([]);
   const [selectedItem, setSelectedItem] = useState<PaketEdukasi | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchPakets = async () => {
+      try {
+        const response = await apiRequest("/api/paket-edukasi?limit=100");
+        if (response.success && response.data) {
+          const mapped = response.data.map((item: any) => ({
+            id: String(item.id),
+            nama: item.judul,
+            deskripsi: item.deskripsi_singkat,
+            harga: formatHarga(item.harga),
+            gambar: item.gambar,
+            durasi: item.durasi,
+            fasilitas: item.fasilitas,
+            linkWa: item.link_wa,
+            deskripsiLengkap: item.deskripsi_lengkap,
+          }));
+          setPaketList(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch packages:", err);
+      }
+    };
+    fetchPakets();
+  }, []);
   
   const handleCardClick = (item: PaketEdukasi) => {
     setSelectedItem(item);
@@ -161,7 +179,7 @@ export default function PaketEdukasiSection() {
       <section id="paket-edukasi" className="w-full bg-white py-16 lg:py-20">
         <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
 
-          {/* ── Header — centered green title ── */}
+          {/* ── Header ── */}
           <div className="flex flex-col items-center text-center mb-10">
             <h2
               className="font-bold text-[var(--color-accent-darkgreen)]"
@@ -171,9 +189,9 @@ export default function PaketEdukasiSection() {
             </h2>
           </div>
 
-          {/* ── Grid: 4 kolom, semua paket tampil langsung ── */}
+          {/* ── Grid ── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            {paketEdukasiList.map((item) => (
+            {paketList.map((item) => (
               <PaketCard
                 key={item.id}
                 item={item}

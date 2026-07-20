@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/admin/Sidebar";
 import Header from "@/components/admin/Header.";
+import { apiRequest } from "@/lib/api";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -15,14 +16,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem("isLoggedIn") !== "true") {
-      router.push("/login");
-    } else {
-      const timer = setTimeout(() => {
-        setIsAuthorized(true);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
+    const verifySession = async () => {
+      if (
+        localStorage.getItem("isLoggedIn") !== "true" ||
+        !localStorage.getItem("token")
+      ) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const response = await apiRequest("/api/auth/me");
+        if (response.success && response.data) {
+          localStorage.setItem("user", JSON.stringify(response.data));
+          localStorage.setItem("userRole", response.data.role);
+          setIsAuthorized(true);
+        } else {
+          router.push("/login");
+        }
+      } catch (err) {
+        // apiRequest already handles 401 redirection, this is a fallback for other network errors
+        router.push("/login");
+      }
+    };
+
+    verifySession();
   }, [router]);
 
   if (!isAuthorized) {

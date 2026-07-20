@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { Produk } from "@/types/produk";
+import { getImageUrl } from "@/lib/api";
 
 interface ProdukModalProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ export default function ProdukModal({ isOpen, onClose, item }: ProdukModalProps)
           {/* Image */}
           <div className="w-full aspect-square rounded-2xl overflow-hidden bg-slate-100 relative">
             <Image
-              src={item.gambar}
+              src={getImageUrl(item.gambar)}
               alt={item.nama}
               fill
               className="object-contain"

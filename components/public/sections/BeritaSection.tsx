@@ -2,14 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { beritaList } from "@/data/content/berita";
+import { useState, useEffect } from "react";
 import type { Berita } from "@/types/berita";
+import { apiRequest, getImageUrl } from "@/lib/api";
 
-// ── Berita Card ───────────────────────────────────────────────
-// Matches CSS export: horizontal flex card
-//   image 144×138px on left, content area on right
-//   title (font-weight 600), date (top 85px, font-weight 300),
-//   "Baca >" button (top 112px, right-aligned, outlined green)
+function formatDate(dateStr: string) {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 function BeritaCard({ item }: { item: Berita }) {
   return (
     <div
@@ -27,7 +36,7 @@ function BeritaCard({ item }: { item: Berita }) {
         style={{ width: "144px", height: "138px" }}
       >
         <Image
-          src={item.gambar}
+          src={getImageUrl(item.gambar)}
           alt={item.judul}
           fill
           className="object-cover"
@@ -40,7 +49,7 @@ function BeritaCard({ item }: { item: Berita }) {
       <div className="relative flex-1" style={{ height: "138px" }}>
         {/* Title */}
         <p
-          className="absolute top-0 left-0 right-3 font-semibold text-black leading-snug"
+          className="absolute top-0 left-0 right-3 font-semibold text-black leading-snug line-clamp-3"
           style={{ fontSize: "15px", fontFamily: "Poppins, sans-serif" }}
         >
           {item.judul}
@@ -51,7 +60,7 @@ function BeritaCard({ item }: { item: Berita }) {
           className="absolute left-0 text-gray-500"
           style={{
             top: "85px",
-            fontSize: "15px",
+            fontSize: "13px",
             fontWeight: 300,
             fontFamily: "Poppins, sans-serif",
           }}
@@ -81,13 +90,32 @@ function BeritaCard({ item }: { item: Berita }) {
   );
 }
 
-// ── Main Section ─────────────────────────────────────────────
-// Shows first 9 news in a 3-column × 3-row grid
-// + "Lihat Lainnya" button linking to /berita
 const PREVIEW_COUNT = 9;
 
 export default function BeritaSection() {
-  const preview = beritaList.slice(0, PREVIEW_COUNT);
+  const [beritaList, setBeritaList] = useState<Berita[]>([]);
+
+  useEffect(() => {
+    const fetchBerita = async () => {
+      try {
+        const response = await apiRequest(`/api/berita?limit=${PREVIEW_COUNT}`);
+        if (response.success && response.data) {
+          const mapped = response.data.map((item: any) => ({
+            id: String(item.id),
+            judul: item.judul,
+            tanggal: formatDate(item.tanggal_publish),
+            gambar: item.gambar,
+            slug: item.slug,
+            isi_konten: item.isi_konten,
+          }));
+          setBeritaList(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch news section:", err);
+      }
+    };
+    fetchBerita();
+  }, []);
 
   return (
     <section id="berita" className="w-full bg-white py-16 lg:py-20">
@@ -101,7 +129,7 @@ export default function BeritaSection() {
 
         {/* ── 3-column grid ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {preview.map((item) => (
+          {beritaList.map((item) => (
             <BeritaCard key={item.id} item={item} />
           ))}
         </div>
@@ -110,7 +138,7 @@ export default function BeritaSection() {
         <div className="flex justify-center mt-10">
           <Link
             href="/berita"
-            className="inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 hover:opacity-90 active:scale-95 bg-(--color-accent-darkgreen) hover:bg-(--color-accent-darkgreen)/50 text-white px-6 py-3 text-sm"
+            className="inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 hover:opacity-90 active:scale-95 bg-[var(--color-accent-darkgreen)] hover:bg-[var(--color-accent-darkgreen)]/85 text-white px-6 py-3 text-sm cursor-pointer"
           >
             Lihat Lainnya
           </Link>

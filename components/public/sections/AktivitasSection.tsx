@@ -2,17 +2,25 @@
 
 import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { aktivitasList } from "@/data/content/aktivitas";
 import type { Aktivitas } from "@/types/aktivitas";
 import AktivitasModal from "../modals/AktivitasModal";
+import { apiRequest, getImageUrl } from "@/lib/api";
 
-// ── Config ──────────────────────────────────────────────────
 const VISIBLE = 4; // cards visible at a time on desktop
 
-// ── Activity Card ────────────────────────────────────────────
-// Matches the CSS from the design export:
-//   card height 296px, image 274px, gradient overlay from 137px,
-//   title at 227px left 13px, date at 258px left 13px
+function formatDate(dateStr: string) {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 function AktivitasCard({
   item,
   onClick
@@ -28,7 +36,7 @@ function AktivitasCard({
     >
       {/* Image */}
       <Image
-        src={item.gambar}
+        src={getImageUrl(item.gambar)}
         alt={item.judul}
         fill
         className="object-cover"
@@ -36,7 +44,7 @@ function AktivitasCard({
         sizes="(max-width: 640px) 100vw, 25vw"
       />
 
-      {/* Gradient overlay — starts at ~46% from top, fades to white */}
+      {/* Gradient overlay */}
       <div
         className="absolute left-0 right-0"
         style={{
@@ -78,14 +86,14 @@ function AktivitasCard({
           fontFamily: "Poppins, sans-serif",
         }}
       >
-        {item.tanggal}
+        {formatDate(item.tanggal)}
       </p>
     </div>
   );
 }
 
-// ── Main Section ─────────────────────────────────────────────
 export default function AktivitasSection() {
+  const [aktivitasList, setAktivitasList] = useState<Aktivitas[]>([]);
   const total = aktivitasList.length;
   const maxIndex = Math.max(0, total - VISIBLE);
   const [current, setCurrent] = useState(0);
@@ -99,13 +107,27 @@ export default function AktivitasSection() {
   const next = useCallback(() => setCurrent((c) => (c >= maxIndex ? 0 : c + 1)), [maxIndex]);
 
   useEffect(() => {
+    const fetchAktivitas = async () => {
+      try {
+        const response = await apiRequest("/api/aktivitas?limit=100");
+        if (response.success && response.data) {
+          setAktivitasList(response.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch aktivitas:", err);
+      }
+    };
+    fetchAktivitas();
+  }, []);
+
+  useEffect(() => {
+    if (maxIndex === 0) return;
     const timer = setInterval(() => {
       next();
     }, 4000); // auto-slide every 4 seconds
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, maxIndex]);
 
-  // Dots: one per possible position
   const dots = Array.from({ length: maxIndex + 1 });
 
   const handleCardClick = (item: Aktivitas) => {

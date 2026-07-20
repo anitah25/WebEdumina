@@ -2,18 +2,12 @@
 
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
-import { produkList } from "@/data/content/produk";
 import type { Produk } from "@/types/produk";
 import ProdukModal from "../modals/ProdukModal";
+import { apiRequest, getImageUrl } from "@/lib/api";
 
-// ── Config ──────────────────────────────────────────────────
 const VISIBLE = 5; // items visible at a time on desktop
 
-// ── Produk Circle Card ───────────────────────────────────────
-// Matches CSS export:
-//   white circle 183×183px with box-shadow: 2px 4px 4px rgba(0,0,0,0.25)
-//   product image centered inside the circle
-//   name label centered below
 function ProdukCard({
   item,
   onClick
@@ -34,7 +28,7 @@ function ProdukCard({
         onClick={onClick}
       >
         <Image
-          src={item.gambar}
+          src={getImageUrl(item.gambar)}
           alt={item.nama}
           fill
           className="object-contain p-4"
@@ -44,7 +38,7 @@ function ProdukCard({
 
       {/* Name */}
       <p
-        className="text-[#000] text-center group-hover:text-[#1D2A62] transition-colors"
+        className="text-[#000] text-center group-hover:text-[#1D2A62] transition-colors font-medium"
         style={{ fontSize: "13px", fontFamily: "Poppins, sans-serif" }}
       >
         {item.nama}
@@ -53,8 +47,8 @@ function ProdukCard({
   );
 }
 
-// ── Main Section ─────────────────────────────────────────────
 export default function ProdukSection() {
+  const [produkList, setProdukList] = useState<Produk[]>([]);
   const total = produkList.length;
   const maxIndex = Math.max(0, total - VISIBLE);
   const [current, setCurrent] = useState(0);
@@ -63,13 +57,34 @@ export default function ProdukSection() {
   const next = useCallback(() => setCurrent((c) => (c >= maxIndex ? 0 : c + 1)), [maxIndex]);
 
   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await apiRequest("/api/produk?limit=100");
+        if (response.success && response.data) {
+          const mapped = response.data.map((item: any) => ({
+            id: String(item.id),
+            nama: item.nama_produk,
+            gambar: item.gambar,
+            deskripsi: item.deskripsi,
+            linkWa: item.link_wa,
+          }));
+          setProdukList(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    if (maxIndex <= 0) return;
     const timer = setInterval(() => {
       next();
     }, 4000); // auto-slide every 4 seconds
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, maxIndex]);
 
-  // Gap between cards in px
   const GAP = 20;
   
   // Modal state

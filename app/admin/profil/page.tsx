@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { apiRequest } from "@/lib/api";
 
 export default function ProfilePage() {
-  // Mock administrative profile state
-  const [profileName, setProfileName] = useState("Administrator");
-  const [profileEmail] = useState(
-    "admin@studycenteredumina.com",
-  );
-  const [profilePhone, setProfilePhone] = useState("0815639225");
-  const [profileRole] = useState("Super Admin");
+  const [userId, setUserId] = useState<number | null>(null);
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileRole, setProfileRole] = useState("");
 
   // Password modification state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -30,17 +29,67 @@ export default function ProfilePage() {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  // Fetch current profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await apiRequest("/api/auth/me");
+        if (response.success && response.data) {
+          const u = response.data;
+          setUserId(u.id);
+          setProfileName(u.nama_lengkap || "");
+          setProfileEmail(u.email || "");
+          setProfileRole(u.role || "");
+          // Try to retrieve mock phone from localStorage if any, or leave default
+          const storedPhone = localStorage.getItem(`profile_phone_${u.id}`) || "0815639225";
+          setProfilePhone(storedPhone);
+        }
+      } catch (err) {
+        console.error("Failed to load user profile:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileName.trim() || !profileEmail.trim() || !profilePhone.trim()) {
       showNotification("Semua field wajib diisi!", "warning");
       return;
     }
-    // Simulate updating DB
-    showNotification("Informasi profil Anda berhasil diperbarui!", "success");
+    if (!userId) return;
+
+    try {
+      const response = await apiRequest(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nama_lengkap: profileName,
+        }),
+      });
+
+      if (response.success) {
+        // Save phone to localStorage since there is no phone column in backend user table
+        localStorage.setItem(`profile_phone_${userId}`, profilePhone);
+        
+        // Update user session in localStorage if needed
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const userObj = JSON.parse(storedUser);
+            userObj.nama_lengkap = profileName;
+            localStorage.setItem("user", JSON.stringify(userObj));
+          } catch {}
+        }
+
+        showNotification("Informasi profil Anda berhasil diperbarui!", "success");
+      }
+    } catch (err: any) {
+      showNotification(err.message || "Gagal memperbarui profil.", "danger");
+    }
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword || !newPassword || !confirmPassword) {
       showNotification("Semua field kata sandi wajib diisi!", "warning");
@@ -54,11 +103,42 @@ export default function ProfilePage() {
       showNotification("Kata sandi baru minimal harus 6 karakter!", "warning");
       return;
     }
-    // Simulate updating password
-    showNotification("Kata sandi Anda berhasil diperbarui!", "success");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    if (!userId) return;
+
+    try {
+      // 1. Verify current password by requesting login validation
+      try {
+        await apiRequest("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: profileEmail,
+            password: currentPassword,
+          }),
+        });
+      } catch {
+        showNotification("Kata sandi saat ini salah!", "danger");
+        return;
+      }
+
+      // 2. Apply new password
+      const response = await apiRequest(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: newPassword,
+        }),
+      });
+
+      if (response.success) {
+        showNotification("Kata sandi Anda berhasil diperbarui!", "success");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (err: any) {
+      showNotification(err.message || "Gagal memperbarui kata sandi.", "danger");
+    }
   };
 
   return (
@@ -124,7 +204,7 @@ export default function ProfilePage() {
         <div className="relative z-10 flex items-center gap-2 bg-[#ADD061]/15 px-3 py-1.5 rounded-xl border border-[#ADD061]/20 self-start sm:self-center">
           <span className="w-2 h-2 rounded-full bg-[#10AA2B] animate-pulse" />
           <span className="text-[10px] font-extrabold uppercase text-[#ADD061] tracking-wider">
-            {profileRole}
+            {profileRole ? (profileRole.charAt(0).toUpperCase() + profileRole.slice(1)) : ""}
           </span>
         </div>
       </div>
@@ -152,7 +232,7 @@ export default function ProfilePage() {
               <input
                 type="text"
                 disabled
-                value={profileRole}
+                value={profileRole ? (profileRole.charAt(0).toUpperCase() + profileRole.slice(1)) : ""}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-slate-400 text-sm font-semibold select-none cursor-not-allowed"
               />
             </div>

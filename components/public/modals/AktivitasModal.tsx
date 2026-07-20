@@ -2,11 +2,25 @@
 
 import Image from "next/image";
 import type { Aktivitas } from "@/types/aktivitas";
+import { getImageUrl } from "@/lib/api";
 
 interface AktivitasModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: Aktivitas | null;
+}
+
+function formatDate(dateStr: string) {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
 }
 
 export default function AktivitasModal({ isOpen, onClose, item }: AktivitasModalProps) {
@@ -42,7 +56,7 @@ export default function AktivitasModal({ isOpen, onClose, item }: AktivitasModal
           {/* Image */}
           <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 relative">
             <Image
-              src={item.gambar}
+              src={getImageUrl(item.gambar)}
               alt={item.judul}
               fill
               className="object-cover"
@@ -56,7 +70,7 @@ export default function AktivitasModal({ isOpen, onClose, item }: AktivitasModal
               <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <p className="text-sm font-bold text-slate-500">{item.tanggal}</p>
+              <p className="text-sm font-bold text-slate-500">{formatDate(item.tanggal)}</p>
             </div>
             <h2 className="text-2xl font-extrabold text-slate-800">{item.judul}</h2>
             

@@ -2,30 +2,51 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Navbar from "@/components/public/Navbar";
-import { beritaList } from "@/data/content/berita";
 import type { Berita } from "@/types/berita";
 import Footer from "@/components/public/Footer";
+import { apiRequest, getImageUrl } from "@/lib/api";
 
-// ── Config ───────────────────────────────────────────────────
 const PER_PAGE = 9;
 
-const ALL_CATEGORIES = [
-  "Semua",
-  ...(Array.from(
-    new Set(beritaList.map((b) => b.kategori).filter(Boolean)),
-  ) as string[]),
-];
+const ALL_CATEGORIES = ["Semua", "Budidaya", "Edukasi", "Wirausaha", "Teknologi"];
+
+function formatDate(dateStr: string) {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+const getMockCategory = (title: string): string => {
+  const lower = title.toLowerCase();
+  if (lower.includes("bioflok") || lower.includes("lele") || lower.includes("pakan") || lower.includes("panen")) return "Budidaya";
+  if (lower.includes("pelatihan") || lower.includes("studi") || lower.includes("edukasi") || lower.includes("workshop") || lower.includes("kunjungan")) return "Edukasi";
+  if (lower.includes("umkm") || lower.includes("penghargaan") || lower.includes("wirausaha") || lower.includes("bisnis") || lower.includes("raih")) return "Wirausaha";
+  return "Teknologi";
+};
+
+const getSummary = (content?: string, maxLength = 100) => {
+  if (!content) return "Klik untuk membaca selengkapnya mengenai berita ini.";
+  if (content.length <= maxLength) return content;
+  return content.slice(0, maxLength) + "...";
+};
 
 // ── News Card (full page variant — vertical stack) ────────────
 function BeritaCardFull({ item }: { item: Berita }) {
   return (
-    <div className="group flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+    <div className="group flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex-1 min-h-[420px]" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
       {/* Image */}
       <div className="relative w-full" style={{ height: "200px" }}>
         <Image
-          src={item.gambar}
+          src={getImageUrl(item.gambar)}
           alt={item.judul}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -34,9 +55,8 @@ function BeritaCardFull({ item }: { item: Berita }) {
         {/* Category badge */}
         {item.kategori && (
           <span
-            className="absolute top-3 left-3 text-white text-xs font-semibold px-3 py-1 rounded-full"
+            className="absolute top-3 left-3 text-white text-xs font-semibold px-3 py-1 rounded-full bg-[#1D2A62]"
             style={{
-              backgroundColor: "var(--color-primary-dark)",
               fontFamily: "Poppins, sans-serif",
             }}
           >
@@ -49,7 +69,7 @@ function BeritaCardFull({ item }: { item: Berita }) {
       <div className="flex flex-col gap-3 p-5 flex-1">
         <Link href={`/berita/${item.slug}`} className="block">
           <p
-            className="font-semibold text-[#111827] leading-snug line-clamp-3 group-hover:text-[var(--color-accent-darkgreen)] transition-colors"
+            className="font-semibold text-[#111827] leading-snug line-clamp-3 group-hover:text-[#437118] transition-colors"
             style={{ fontSize: "15px", fontFamily: "Poppins, sans-serif" }}
           >
             {item.judul}
@@ -57,7 +77,7 @@ function BeritaCardFull({ item }: { item: Berita }) {
 
           {item.ringkasan && (
             <p
-              className="text-gray-500 leading-relaxed line-clamp-2"
+              className="text-gray-500 leading-relaxed line-clamp-2 mt-2"
               style={{ fontSize: "13px", fontFamily: "Poppins, sans-serif" }}
             >
               {item.ringkasan}
@@ -70,7 +90,7 @@ function BeritaCardFull({ item }: { item: Berita }) {
           <span
             className="text-gray-400"
             style={{
-              fontSize: "13px",
+              fontSize: "12px",
               fontWeight: 300,
               fontFamily: "Poppins, sans-serif",
             }}
@@ -79,7 +99,7 @@ function BeritaCardFull({ item }: { item: Berita }) {
           </span>
           <Link
             href={`/berita/${item.slug}`}
-            className="flex items-center justify-center rounded-lg hover:bg-[var(--color-accent-lightgreen)]/10 transition-colors"
+            className="flex items-center justify-center rounded-lg hover:bg-[#ADD061]/10 transition-colors"
             style={{
               border: "1px solid #b6cf7b",
               padding: "3px 10px",
@@ -99,9 +119,34 @@ function BeritaCardFull({ item }: { item: Berita }) {
 
 // ── Main Page Content ─────────────────────────────────────────
 export default function BeritaPageContent() {
+  const [beritaList, setBeritaList] = useState<Berita[]>([]);
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    const fetchAllBerita = async () => {
+      try {
+        const response = await apiRequest("/api/berita?limit=100");
+        if (response.success && response.data) {
+          const mapped = response.data.map((item: any) => ({
+            id: String(item.id),
+            judul: item.judul,
+            tanggal: formatDate(item.tanggal_publish),
+            gambar: item.gambar,
+            slug: item.slug,
+            kategori: getMockCategory(item.judul),
+            ringkasan: getSummary(item.isi_konten),
+            isi_konten: item.isi_konten,
+          }));
+          setBeritaList(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch news page content:", err);
+      }
+    };
+    fetchAllBerita();
+  }, []);
 
   // Filter
   const filtered = useMemo(() => {
@@ -112,7 +157,7 @@ export default function BeritaPageContent() {
         !search || b.judul.toLowerCase().includes(search.toLowerCase());
       return matchCat && matchSearch;
     });
-  }, [activeCategory, search]);
+  }, [activeCategory, search, beritaList]);
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
@@ -220,7 +265,7 @@ export default function BeritaPageContent() {
               <button
                 key={cat}
                 onClick={() => handleCategory(cat)}
-                className="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200"
+                className="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer"
                 style={{
                   fontFamily: "Poppins, sans-serif",
                   backgroundColor:
@@ -287,7 +332,7 @@ export default function BeritaPageContent() {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30 hover:bg-gray-100 transition-colors"
+              className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30 hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <svg
                 className="w-4 h-4"
@@ -308,7 +353,7 @@ export default function BeritaPageContent() {
               <button
                 key={i}
                 onClick={() => setPage(i)}
-                className="w-9 h-9 rounded-full text-sm font-semibold transition-all duration-200"
+                className="w-9 h-9 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer"
                 style={{
                   backgroundColor:
                     i === page ? "var(--color-primary-dark)" : "transparent",
@@ -323,7 +368,7 @@ export default function BeritaPageContent() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page === totalPages - 1}
-              className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30 hover:bg-gray-100 transition-colors"
+              className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30 hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <svg
                 className="w-4 h-4"

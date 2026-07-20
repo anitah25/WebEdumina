@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { PaketEdukasi } from "@/types/paketEdukasi";
+import { getImageUrl } from "@/lib/api";
 
 interface PaketEdukasiModalProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export default function PaketEdukasiModal({ isOpen, onClose, item }: PaketEdukas
           {/* Image */}
           <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 relative">
             <Image
-              src={item.gambar}
+              src={getImageUrl(item.gambar)}
               alt={item.nama}
               fill
               className="object-cover"
