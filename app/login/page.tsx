@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { apiRequest } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,41 +25,41 @@ export default function LoginPage() {
     return () => clearTimeout(timer);
   }, [router]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!email.trim() || !password.trim()) {
-      setError("Email dan password harus diisi.");
+      setError("Email/Username dan password harus diisi.");
       return;
     }
 
     setIsLoading(true);
 
-    // Mock validation checking default admin/operator email and password
-    setTimeout(() => {
-      const normalizedEmail = email.toLowerCase().trim();
-      if (
-        normalizedEmail === "admin@studycenteredumina.com" &&
-        password === "admin123"
-      ) {
+    try {
+      const response = await apiRequest("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          username: email.trim(),
+          password: password,
+        }),
+      });
+
+      if (response.success && response.data) {
         localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("userRole", "admin");
-        window.dispatchEvent(new Event("storage"));
-        router.push("/admin");
-      } else if (
-        normalizedEmail === "operator1@studycenteredumina.com" &&
-        password === "operator123"
-      ) {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("userRole", "operator");
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("userRole", response.data.user.role);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
         window.dispatchEvent(new Event("storage"));
         router.push("/admin");
       } else {
-        setIsLoading(false);
-        setError("Email atau password salah.");
+        setError(response.message || "Gagal melakukan login.");
       }
-    }, 1200);
+    } catch (err: any) {
+      setError(err.message || "Email/Username atau password salah.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isMounted) return null;
@@ -144,7 +145,7 @@ export default function LoginPage() {
             {/* Email */}
             <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Email
+                Email / Username
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -163,12 +164,12 @@ export default function LoginPage() {
                   </svg>
                 </span>
                 <input
-                  type="email"
+                  type="text"
                   required
                   disabled={isLoading}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Masukkan alamat email"
+                  placeholder="Masukkan email atau username"
                   className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition disabled:opacity-50"
                 />
               </div>

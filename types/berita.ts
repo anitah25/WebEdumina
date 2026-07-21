@@ -56,3 +56,13 @@ export function formatTanggalBerita(dateStr: string): string {
     return dateStr;
   }
 }
+
+export interface BeritaFormData {
+  judul: string;
+  slug: string;
+  isi_konten: string;
+  tanggal_publish: string;
+  gambar: string;
+  ringkasan?: string;
+  kategori?: string;
+}

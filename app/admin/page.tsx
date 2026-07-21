@@ -2,19 +2,38 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ActivityIcon,
-  NewsIcon,
-  ProductIcon,
-} from "@/components/admin/Icons";
+import { ActivityIcon, NewsIcon, ProductIcon, PackageIcon } from "@/components/admin/Icons";
+import { apiRequest } from "@/lib/api";
 
 export default function AdminDashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
+  const [stats, setStats] = useState({ berita: 0, produk: 0, aktivitas: 0, paket: 0 });
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsMounted(true);
     }, 0);
+
+    const fetchStats = async () => {
+      try {
+        const [resBerita, resProduk, resAktivitas, resPaket] = await Promise.all([
+          apiRequest("/api/berita?limit=1"),
+          apiRequest("/api/produk?limit=1"),
+          apiRequest("/api/aktivitas?limit=1"),
+          apiRequest("/api/paket-edukasi?limit=1"),
+        ]);
+        setStats({
+          berita: resBerita.meta?.total || 0,
+          produk: resProduk.meta?.total || 0,
+          aktivitas: resAktivitas.meta?.total || 0,
+          paket: resPaket.meta?.total || 0,
+        });
+      } catch (err) {
+        console.error("Failed to fetch stats for dashboard:", err);
+      }
+    };
+
+    fetchStats();
     return () => clearTimeout(timer);
   }, []);
 
@@ -101,40 +120,20 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* 2. Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: Total Berita */}
         <div className="bg-white rounded-3xl p-6 border border-white/40 shadow-sm flex flex-col justify-between min-h-[170px] hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
           <div className="flex items-start justify-between">
             <div className="w-12 h-12 rounded-2xl bg-[#E5F1FD] flex items-center justify-center text-[#1D2A62] shadow-sm transition-transform duration-300 group-hover:scale-105">
               <NewsIcon />
             </div>
-            <div className="flex items-center gap-0.5 bg-[#EAF5D6] text-[#437118] px-2.5 py-1 rounded-full text-xs font-bold shadow-sm/5">
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
-                />
-              </svg>
-              +5%
-            </div>
           </div>
           <div className="mt-4">
             <div className="text-4xl font-extrabold text-[#1D2A62] tracking-tight">
-              45
+              {stats.berita}
             </div>
             <div className="text-sm font-semibold text-slate-800 mt-1">
               Total Berita
-            </div>
-            <div className="text-xs text-slate-400 mt-0.5">
-              3 draft menunggu
             </div>
           </div>
         </div>
@@ -145,70 +144,47 @@ export default function AdminDashboardPage() {
             <div className="w-12 h-12 rounded-2xl bg-[#E5F1FD] flex items-center justify-center text-[#1D2A62] shadow-sm transition-transform duration-300 group-hover:scale-105">
               <ProductIcon />
             </div>
-            <div className="flex items-center gap-0.5 bg-[#EAF5D6] text-[#437118] px-2.5 py-1 rounded-full text-xs font-bold shadow-sm/5">
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
-                />
-              </svg>
-              +3%
-            </div>
           </div>
           <div className="mt-4">
             <div className="text-4xl font-extrabold text-[#1D2A62] tracking-tight">
-              28
+              {stats.produk}
             </div>
             <div className="text-sm font-semibold text-slate-800 mt-1">
               Total Produk
             </div>
-            <div className="text-xs text-red-500 font-medium mt-0.5">
-              2 stok habis
+          </div>
+        </div>
+
+        {/* Card 3: Total Paket Edukasi */}
+        <div className="bg-white rounded-3xl p-6 border border-white/40 shadow-sm flex flex-col justify-between min-h-[170px] hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-[#E5F1FD] flex items-center justify-center text-[#1D2A62] shadow-sm transition-transform duration-300 group-hover:scale-105">
+              <PackageIcon />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="text-4xl font-extrabold text-[#1D2A62] tracking-tight">
+              {stats.paket}
+            </div>
+            <div className="text-sm font-semibold text-slate-800 mt-1">
+              Total Paket Edukasi
             </div>
           </div>
         </div>
 
-        {/* Card 3: Total Aktivitas */}
+        {/* Card 4: Total Aktivitas */}
         <div className="bg-white rounded-3xl p-6 border border-white/40 shadow-sm flex flex-col justify-between min-h-[170px] hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
           <div className="flex items-start justify-between">
             <div className="w-12 h-12 rounded-2xl bg-[#E5F1FD] flex items-center justify-center text-[#1D2A62] shadow-sm transition-transform duration-300 group-hover:scale-105">
               <ActivityIcon />
             </div>
-            <div className="flex items-center gap-0.5 bg-[#EAF5D6] text-[#437118] px-2.5 py-1 rounded-full text-xs font-bold shadow-sm/5">
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
-                />
-              </svg>
-              +18%
-            </div>
           </div>
           <div className="mt-4">
             <div className="text-4xl font-extrabold text-[#1D2A62] tracking-tight">
-              67
+              {stats.aktivitas}
             </div>
             <div className="text-sm font-semibold text-slate-800 mt-1">
               Total Aktivitas
-            </div>
-            <div className="text-xs text-amber-600 font-medium mt-0.5">
-              4 akan datang
             </div>
           </div>
         </div>
@@ -241,6 +217,16 @@ export default function AdminDashboardPage() {
               <ProductIcon />
             </div>
             + Tambah Produk
+          </Link>
+
+          <Link
+            href="/admin/paket"
+            className="inline-flex items-center gap-2 bg-[#437118] hover:bg-[#345912] active:scale-95 text-white px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#437118]/15 hover:shadow-lg hover:shadow-[#437118]/25"
+          >
+            <div className="w-5 h-5 shrink-0 flex items-center justify-center text-white">
+              <PackageIcon />
+            </div>
+            + Tambah Paket Edukasi
           </Link>
 
           <Link

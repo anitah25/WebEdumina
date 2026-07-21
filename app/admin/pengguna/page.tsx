@@ -1,45 +1,30 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { UserIcon } from "@/components/admin/Icons";
 import UserFormModal from "@/components/admin/pengguna/UserFormModal";
 import DeleteConfirmModal from "@/components/admin/pengguna/DeleteConfirmModal";
 import type { AdminUser, UserFormData } from "@/types/user";
-
-// Initial mock users
-const INITIAL_USERS: AdminUser[] = [
-  {
-    id: 1,
-    username: "admin",
-    email: "admin@studycenteredumina.com",
-    namaLengkap: "Administrator Utama",
-    role: "admin",
-    status: "active",
-    createdAt: "2026-01-01",
-  },
-  {
-    id: 2,
-    username: "operator1",
-    email: "operator1@studycenteredumina.com",
-    namaLengkap: "Operator Satu",
-    role: "operator",
-    status: "active",
-    createdAt: "2026-02-15",
-  },
-  {
-    id: 3,
-    username: "operator2",
-    email: "operator2@studycenteredumina.com",
-    namaLengkap: "Operator Dua",
-    role: "operator",
-    status: "inactive",
-    createdAt: "2026-03-20",
-  },
-];
+import { apiRequest } from "@/lib/api";
 
 export default function PenggunaPage() {
-  const [users, setUsers] = useState<AdminUser[]>(INITIAL_USERS);
+  const router = useRouter();
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Redirect operator role away from Pengguna page
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.role === "operator") {
+          router.replace("/forbidden");
+        }
+      } catch {}
+    }
+  }, [router]);
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -54,6 +39,31 @@ export default function PenggunaPage() {
     message: string;
     type: "success" | "danger";
   } | null>(null);
+
+  // Fetch users from API
+  const fetchUsers = async () => {
+    try {
+      const response = await apiRequest("/api/users");
+      if (response.success && response.data) {
+        const mapped = response.data.map((u: any) => ({
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          namaLengkap: u.nama_lengkap,
+          role: u.role,
+          status: u.status,
+          createdAt: u.created_at,
+        }));
+        setUsers(mapped);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   // Auto-clear notifications
   useEffect(() => {
@@ -93,49 +103,108 @@ export default function PenggunaPage() {
     setIsDeleteOpen(true);
   };
 
-  const handleSaveUser = (data: UserFormData) => {
-    if (editingId !== null) {
-      // Update existing user
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === editingId
-            ? {
-                ...user,
-                ...data,
-              }
-            : user
-        )
-      );
-      setNotification({
-        message: "Pengguna berhasil diperbarui!",
-        type: "success",
-      });
-    } else {
-      // Create new user
-      const newUser: AdminUser = {
-        id: Date.now(),
-        ...data,
-        createdAt: new Date().toISOString().split("T")[0],
+  const handleSaveUser = async (data: UserFormData) => {
+    setIsFormOpen(false);
+    try {
+      const payload: any = {
+        username: data.username,
+        email: data.email,
+        nama_lengkap: data.namaLengkap,
+        role: data.role,
+        status: data.status,
       };
-      setUsers((prev) => [newUser, ...prev]);
+
+      if ((data as any).password) {
+        payload.password = (data as any).password;
+      }
+
+      if (editingId !== null) {
+        // Update existing user
+        const response = await apiRequest(`/api/users/${editingId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.success && response.data) {
+          const u = response.data;
+          const updatedUser: AdminUser = {
+            id: u.id,
+            username: u.username,
+            email: u.email,
+            namaLengkap: u.nama_lengkap,
+            role: u.role,
+            status: u.status,
+            createdAt: u.created_at,
+          };
+          setUsers((prev) =>
+            prev.map((user) => (user.id === editingId ? updatedUser : user))
+          );
+          setNotification({
+            message: "Pengguna berhasil diperbarui!",
+            type: "success",
+          });
+        }
+      } else {
+        // Create new user
+        const response = await apiRequest("/api/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.success && response.data) {
+          const u = response.data;
+          const newUser: AdminUser = {
+            id: u.id,
+            username: u.username,
+            email: u.email,
+            namaLengkap: u.nama_lengkap,
+            role: u.role,
+            status: u.status,
+            createdAt: u.created_at,
+          };
+          setUsers((prev) => [newUser, ...prev]);
+          setNotification({
+            message: "Pengguna baru berhasil ditambahkan!",
+            type: "success",
+          });
+        }
+      }
+    } catch (err: any) {
       setNotification({
-        message: "Pengguna baru berhasil ditambahkan!",
-        type: "success",
+        message: err.message || "Gagal menyimpan pengguna.",
+        type: "danger",
       });
     }
-
-    setIsFormOpen(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!userToDelete) return;
-    setUsers((prev) => prev.filter((user) => user.id !== userToDelete.id));
-    setNotification({
-      message: `Pengguna "${userToDelete.namaLengkap}" telah dihapus.`,
-      type: "danger",
-    });
-    setIsDeleteOpen(false);
-    setUserToDelete(null);
+    try {
+      const response = await apiRequest(`/api/users/${userToDelete.id}`, {
+        method: "DELETE",
+      });
+      if (response.success) {
+        setUsers((prev) => prev.filter((user) => user.id !== userToDelete.id));
+        setNotification({
+          message: `Pengguna "${userToDelete.namaLengkap}" telah dihapus.`,
+          type: "success",
+        });
+      }
+    } catch (err: any) {
+      setNotification({
+        message: err.message || "Gagal menghapus pengguna.",
+        type: "danger",
+      });
+    } finally {
+      setIsDeleteOpen(false);
+      setUserToDelete(null);
+    }
   };
 
   // Format date for display
@@ -232,7 +301,7 @@ export default function PenggunaPage() {
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 bg-(--color-accent-lightgreen) hover:bg-(--color-accent-lightgreen)/80 active:scale-95 text-(--color-primary-dark) px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 bg-[#ADD061] hover:bg-[#ADD061]/80 active:scale-95 text-[#1D2A62] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
         >
           <svg
             className="w-4 h-4 shrink-0"
@@ -332,7 +401,7 @@ export default function PenggunaPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#1D2A62] text-white flex items-center justify-center font-bold text-sm">
-                          {user.namaLengkap.charAt(0)}
+                          {user.namaLengkap ? user.namaLengkap.charAt(0) : "?"}
                         </div>
                         <div>
                           <div className="font-semibold text-slate-800">
@@ -353,7 +422,7 @@ export default function PenggunaPage() {
                           user.role
                         )}`}
                       >
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -362,8 +431,8 @@ export default function PenggunaPage() {
                           user.status
                         )}`}
                       >
-                        {user.status.charAt(0).toUpperCase() +
-                          user.status.slice(1)}
+                        {user.status ? user.status.charAt(0).toUpperCase() +
+                          user.status.slice(1) : ""}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-slate-600 text-sm">

@@ -6,45 +6,11 @@ import PaketFormModal from "@/components/admin/paket/PaketFormModal";
 import DeleteConfirmModal from "@/components/admin/paket/DeleteConfirmModal";
 import PaketDetailModal from "@/components/admin/paket/PaketDetailModal";
 import type { AdminPaketEdukasi } from "@/types/paketEdukasi";
-
-const INITIAL_PAKET: AdminPaketEdukasi[] = [
-  {
-    id: 1,
-    judul: "Paket Teknologi Modern",
-    deskripsi_singkat: "Monitoring kolam berbasis IoT dan data real-time.",
-    deskripsi_lengkap: "Pelajari cara menggunakan teknologi IoT untuk memantau kualitas air kolam secara real-time. Paket ini mencakup training penggunaan sensor, dashboard monitoring, dan analisis data.",
-    harga: "Rp 750.000",
-    durasi: "3 Hari",
-    fasilitas: "Modul panduan, Akses dashboard, Sertifikat, Konsultasi 1 bulan",
-    gambar: "/tentangKami2.png",
-    link_wa: "62815639225",
-  },
-  {
-    id: 2,
-    judul: "Paket Edukasi Dasar",
-    deskripsi_singkat: "Pengenalan budidaya lele untuk pemula dari nol.",
-    deskripsi_lengkap: "Paket dasar untuk pemula yang ingin memulai budidaya lele. Materi mencakup pemilihan benih, persiapan kolam, manajemen pakan, dan perawatan harian.",
-    harga: "Rp 350.000",
-    durasi: "2 Hari",
-    fasilitas: "Buku panduan, Video tutorial, Konsultasi",
-    gambar: "/tentangKami1.png",
-    link_wa: "62815639225",
-  },
-  {
-    id: 3,
-    judul: "Paket Pembibitan",
-    deskripsi_singkat: "Teknik pemijahan dan perawatan larva lele unggulan.",
-    deskripsi_lengkap: "Pelajari teknik pemijahan lele secara intensif, perawatan larva, hingga menjadi benih yang siap jual. Cocok untuk yang ingin memproduksi benih lele.",
-    harga: "Rp 500.000",
-    durasi: "4 Hari",
-    fasilitas: "Praktik langsung, Buku panduan, Konsultasi",
-    gambar: "/tentangKami3.png",
-    link_wa: "62815639225",
-  },
-];
+import { formatHarga } from "@/types/paketEdukasi";
+import { apiRequest, getImageUrl, dataURLtoFile } from "@/lib/api";
 
 export default function PaketAdminPage() {
-  const [paketList, setPaketList] = useState<AdminPaketEdukasi[]>(INITIAL_PAKET);
+  const [paketList, setPaketList] = useState<AdminPaketEdukasi[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -62,6 +28,22 @@ export default function PaketAdminPage() {
     message: string;
     type: "success" | "danger";
   } | null>(null);
+
+  // Fetch educational packages from backend API
+  const fetchPakets = async () => {
+    try {
+      const response = await apiRequest("/api/paket-edukasi?limit=100");
+      if (response.success && response.data) {
+        setPaketList(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch packages:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPakets();
+  }, []);
 
   useEffect(() => {
     if (notification) {
@@ -102,39 +84,86 @@ export default function PaketAdminPage() {
     setIsDetailOpen(true);
   };
 
-  const handleSavePaket = (data: Omit<AdminPaketEdukasi, "id">) => {
-    if (editingId !== null) {
-      setPaketList((prev) =>
-        prev.map((p) => (p.id === editingId ? { ...p, ...data } : p))
-      );
+  const handleSavePaket = async (data: Omit<AdminPaketEdukasi, "id">) => {
+    setIsFormOpen(false);
+    try {
+      const formData = new FormData();
+      formData.append("judul", data.judul);
+      
+      // Clean price value from symbols/periods before sending to backend
+      let cleanPrice = String(data.harga).trim();
+      cleanPrice = cleanPrice.replace(/Rp\s?/gi, "").replace(/\./g, "").replace(/,/g, ".");
+      formData.append("harga", cleanPrice);
+      formData.append("deskripsi_singkat", data.deskripsi_singkat || "");
+      formData.append("deskripsi_lengkap", data.deskripsi_lengkap || "");
+      formData.append("durasi", data.durasi || "");
+      formData.append("fasilitas", data.fasilitas || "");
+      formData.append("link_wa", data.link_wa || "");
+
+      const file = dataURLtoFile(data.gambar, "paket.png");
+      if (file) {
+        formData.append("gambar", file);
+      }
+
+      if (editingId !== null) {
+        // Update action
+        const response = await apiRequest(`/api/paket-edukasi/${editingId}`, {
+          method: "PATCH",
+          body: formData,
+        });
+        if (response.success && response.data) {
+          setPaketList((prev) =>
+            prev.map((p) => (p.id === editingId ? response.data : p))
+          );
+          setNotification({
+            message: "Paket berhasil diperbarui!",
+            type: "success",
+          });
+        }
+      } else {
+        // Create action
+        const response = await apiRequest("/api/paket-edukasi", {
+          method: "POST",
+          body: formData,
+        });
+        if (response.success && response.data) {
+          setPaketList((prev) => [response.data, ...prev]);
+          setNotification({
+            message: "Paket baru berhasil ditambahkan!",
+            type: "success",
+          });
+        }
+      }
+    } catch (err: any) {
       setNotification({
-        message: "Paket berhasil diperbarui!",
-        type: "success",
-      });
-    } else {
-      const newPaket: AdminPaketEdukasi = {
-        id: Date.now(),
-        ...data,
-      };
-      setPaketList((prev) => [newPaket, ...prev]);
-      setNotification({
-        message: "Paket baru berhasil ditambahkan!",
-        type: "success",
+        message: err.message || "Gagal menyimpan paket.",
+        type: "danger",
       });
     }
-
-    setIsFormOpen(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!paketToDelete) return;
-    setPaketList((prev) => prev.filter((p) => p.id !== paketToDelete.id));
-    setNotification({
-      message: `Paket "${paketToDelete.judul}" telah dihapus.`,
-      type: "danger",
-    });
-    setIsDeleteOpen(false);
-    setPaketToDelete(null);
+    try {
+      const response = await apiRequest(`/api/paket-edukasi/${paketToDelete.id}`, {
+        method: "DELETE",
+      });
+      if (response.success) {
+        setPaketList((prev) => prev.filter((p) => p.id !== paketToDelete.id));
+        setNotification({
+          message: `Paket "${paketToDelete.judul}" telah dihapus.`,
+          type: "success",
+        });
+      }
+    } catch (err: any) {
+      setNotification({
+        message: err.message || "Gagal menghapus paket.",
+        type: "danger",
+      });
+    } finally {
+      setIsDeleteOpen(false);
+      setPaketToDelete(null);
+    }
   };
 
   return (
@@ -197,7 +226,7 @@ export default function PaketAdminPage() {
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 bg-(--color-accent-lightgreen) hover:bg-(--color-accent-lightgreen)/80 active:scale-95 text-(--color-primary-dark) px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 bg-[#ADD061] hover:bg-[#ADD061]/80 active:scale-95 text-[#1D2A62] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#ADD061]/20 self-start sm:self-center cursor-pointer"
         >
           <svg
             className="w-4 h-4 shrink-0"
@@ -265,7 +294,7 @@ export default function PaketAdminPage() {
                 {paket.gambar ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
-                    src={paket.gambar}
+                    src={getImageUrl(paket.gambar)}
                     alt={paket.judul}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => {
@@ -300,7 +329,7 @@ export default function PaketAdminPage() {
                   </div>
                 )}
                 <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-xs px-3 py-1 rounded-full text-[10px] font-extrabold text-[#1D2A62] border border-white/20">
-                  {paket.harga}
+                  {formatHarga(paket.harga)}
                 </div>
               </div>
 
@@ -412,12 +441,20 @@ export default function PaketAdminPage() {
         </div>
       )}
 
+      {/* Modals */}
       <PaketFormModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         editingPaket={
           editingId !== null
-            ? paketList.find((p) => p.id === editingId) || null
+            ? (() => {
+                const p = paketList.find((x) => x.id === editingId);
+                if (!p) return null;
+                return {
+                  ...p,
+                  gambar: getImageUrl(p.gambar),
+                };
+              })()
             : null
         }
         onSave={handleSavePaket}
@@ -426,7 +463,14 @@ export default function PaketAdminPage() {
       <PaketDetailModal
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
-        paket={selectedDetailPaket}
+        paket={
+          selectedDetailPaket
+            ? {
+                ...selectedDetailPaket,
+                gambar: getImageUrl(selectedDetailPaket.gambar),
+              }
+            : null
+        }
       />
 
       <DeleteConfirmModal

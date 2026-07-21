@@ -3,11 +3,13 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import { apiRequest } from "@/lib/api";
 
 const pageLabels: Record<string, string> = {
   aktivitas: "Aktivitas",
   produk: "Produk",
   "paket-edukasi": "Paket Edukasi",
+  paket: "Paket Edukasi",
   berita: "Berita",
   pengguna: "Pengguna",
   profil: "Profil Saya",
@@ -24,13 +26,30 @@ function getCurrentPageLabel(pathname: string) {
   return pageLabels[segments[1]] ?? segments[1].replace(/-/g, " ");
 }
 
-export default function Header() {
+type HeaderProps = {
+  onToggleSidebar?: () => void;
+};
+
+export default function Header({ onToggleSidebar }: HeaderProps) {
   const pathname = usePathname();
   const currentPageLabel = getCurrentPageLabel(pathname);
   const isDashboard = currentPageLabel === "Dashboard";
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<{ nama_lengkap: string; role: string } | null>(null);
+
+  // Load user profile details on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -44,16 +63,34 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="h-17 border-b border-slate-200 bg-white px-6 shadow-[0_1px_0_rgba(15,23,42,0.04)] relative z-30">
-      <div className="flex h-full items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <h1
-            className={`truncate text-[15px] font-semibold tracking-tight ${
-              isDashboard ? "text-slate-900" : "text-slate-400"
-            }`}
+    <header className="h-16 sm:h-17 border-b border-slate-200 bg-white px-4 sm:px-6 shadow-[0_1px_0_rgba(15,23,42,0.04)] relative z-30 shrink-0">
+      <div className="flex h-full items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          {/* Mobile Sidebar Toggle Button */}
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 lg:hidden focus:outline-none shrink-0"
+            aria-label="Buka sidebar"
           >
-            Dashboard
-          </h1>
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Breadcrumb: Dashboard Link */}
+          {isDashboard ? (
+            <h1 className="truncate text-sm sm:text-[15px] font-semibold tracking-tight text-slate-900">
+              Dashboard
+            </h1>
+          ) : (
+            <Link
+              href="/admin"
+              className="truncate text-sm sm:text-[15px] font-semibold tracking-tight text-slate-400 hover:text-[#1D2A62] hover:underline transition-colors"
+            >
+              Dashboard
+            </Link>
+          )}
 
           {!isDashboard ? (
             <>
@@ -70,7 +107,7 @@ export default function Header() {
                 />
               </svg>
 
-              <h2 className="truncate text-[15px] font-semibold tracking-tight text-slate-900">
+              <h2 className="truncate text-sm sm:text-[15px] font-semibold tracking-tight text-slate-900">
                 {currentPageLabel}
               </h2>
             </>
@@ -81,15 +118,19 @@ export default function Header() {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-3 text-left focus:outline-none hover:bg-slate-50 px-3 py-1.5 rounded-2xl transition duration-150 cursor-pointer active:scale-98"
+            className="flex items-center gap-2 sm:gap-3 text-left focus:outline-none hover:bg-slate-50 px-2 sm:px-3 py-1.5 rounded-2xl transition duration-150 cursor-pointer active:scale-98"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-sm font-semibold text-white">
-              A
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-[#1D2A62] text-xs sm:text-sm font-bold text-white uppercase shrink-0">
+              {user?.nama_lengkap ? user.nama_lengkap.charAt(0) : "A"}
             </div>
 
-            <div className="leading-tight">
-              <p className="text-[15px] font-semibold text-slate-900">Admin</p>
-              <p className="text-sm text-slate-500">Super Admin</p>
+            <div className="leading-tight hidden xs:block sm:block">
+              <p className="text-xs sm:text-[15px] font-semibold text-slate-900 capitalize truncate max-w-[120px] sm:max-w-none">
+                {user?.nama_lengkap || "Admin"}
+              </p>
+              <p className="text-[11px] sm:text-sm text-slate-500 capitalize">
+                {user?.role || "Operator"}
+              </p>
             </div>
 
             <svg
@@ -123,10 +164,17 @@ export default function Header() {
               </Link>
               <div className="border-t border-slate-100 my-1" />
               <button
-                onClick={() => {
+                onClick={async () => {
                   setIsDropdownOpen(false);
-                  console.log("Logout triggered");
+                  try {
+                    await apiRequest("/api/auth/logout", { method: "POST" });
+                  } catch (e) {
+                    // Ignore network error on logout
+                  }
                   localStorage.removeItem("isLoggedIn");
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("userRole");
+                  localStorage.removeItem("user");
                   window.location.href = "/";
                 }}
                 className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold text-left transition-colors cursor-pointer"

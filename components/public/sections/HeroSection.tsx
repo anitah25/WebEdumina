@@ -32,7 +32,7 @@ export default function HeroSection() {
           </div>
 
           {/* Right Column: Hero Image with Gradient Overlay */}
-          <div className="lg:col-span-6 relative w-full h-[280px] sm:h-[380px] lg:h-[450px]">
+          <div className="hidden md:block lg:col-span-6 relative w-full h-[280px] sm:h-[380px] lg:h-[450px]">
             <Image
               src="/gambarHerosection.svg"
               alt="Belajar Praktik Berdaya Budidaya Lele"
@@ -73,7 +73,7 @@ export default function HeroSection() {
 
               <div>
                 <div className="text-xl md:text-2xl font-extrabold text-[#1D2A62] leading-tight">
-                  25 +
+                  130 +
                 </div>
                 <div className="text-xs text-gray-400 font-semibold tracking-wide">
                   Kolam Budidaya
@@ -157,8 +157,10 @@ export default function HeroSection() {
 
               <div>
                 <div className="text-xl md:text-2xl font-extrabold text-[#1D2A62] leading-tight">
-                  120 +{" "}
-                  <span className="text-xs font-bold text-gray-500">ton</span>
+                  65000 +{" "}
+                  <span className="text-xs font-bold text-gray-500">
+                    kg/tahun
+                  </span>
                 </div>
                 <div className="text-xs text-gray-400 font-semibold tracking-wide">
                   Produksi Lele
