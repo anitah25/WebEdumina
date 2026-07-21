@@ -487,10 +487,10 @@ Mendapatkan daftar aktivitas diurutkan berdasarkan tanggal terbaru (`tanggal` DE
 Modul untuk mengelola katalog produk lele dan olahannya.
 
 #### 5.1. List Produk (Paginated)
-Mendapatkan daftar produk untuk ditampilkan di katalog/landing page.
+Mendapatkan daftar produk untuk ditampilkan pada katalog/landing page.
 *   **URL:** `/api/produk`
 *   **Method:** `GET`
-*   **Auth:** Public
+*   **Auth:** Public (Tidak Butuh Token)
 *   **Query Parameters:**
     *   `page`: Nomor halaman (Integer, opsional, default: `1`)
     *   `limit`: Jumlah data per halaman (Integer, opsional, default: `12`, maksimal `100`)
@@ -503,10 +503,11 @@ Mendapatkan daftar produk untuk ditampilkan di katalog/landing page.
         {
           "id": 1,
           "nama_produk": "Lele Segar",
+          "harga": "25000.00",
           "link_wa": "628156392250",
           "gambar": "uploads/produk/default.jpg",
-          "created_at": "2026-07-18T15:32:00.000Z",
-          "updated_at": "2026-07-18T15:32:00.000Z"
+          "created_at": "2026-07-20T03:00:00.000Z",
+          "updated_at": "2026-07-20T03:00:00.000Z"
         }
       ],
       "meta": {
@@ -519,7 +520,7 @@ Mendapatkan daftar produk untuk ditampilkan di katalog/landing page.
     ```
 
 #### 5.2. Detail Produk
-Mendapatkan deskripsi detail produk untuk kebutuhan popup modal di Frontend.
+Mendapatkan deskripsi dan harga detail produk untuk kebutuhan popup modal di Frontend.
 *   **URL:** `/api/produk/:id`
 *   **Method:** `GET`
 *   **Auth:** Public
@@ -532,11 +533,12 @@ Mendapatkan deskripsi detail produk untuk kebutuhan popup modal di Frontend.
       "data": {
         "id": 1,
         "nama_produk": "Lele Segar",
+        "harga": "25000.00",
         "gambar": "uploads/produk/default.jpg",
         "deskripsi": "Lele segar hasil budidaya kolam Siroto. Ukuran konsumsi 3-5 ekor/kg.",
         "link_wa": "628156392250",
-        "created_at": "2026-07-18T15:32:00.000Z",
-        "updated_at": "2026-07-18T15:32:00.000Z"
+        "created_at": "2026-07-20T03:00:00.000Z",
+        "updated_at": "2026-07-20T03:00:00.000Z"
       }
     }
     ```
@@ -550,12 +552,10 @@ Mendapatkan deskripsi detail produk untuk kebutuhan popup modal di Frontend.
     | Field | Tipe Data | Keterangan | Validasi |
     | :--- | :--- | :--- | :--- |
     | `nama_produk` | String | Nama produk | Wajib |
+    | `harga` | Decimal / Number | Harga produk (e.g. `25000` atau `25000.00`) | Opsional |
     | `deskripsi` | String | Deskripsi produk lele | Opsional |
-    | `link_wa` | String | Nomor WhatsApp tujuan order (e.g. `08156392250` atau `628156392250`) | Opsional. Sistem menormalkan awalan `0` menjadi `62`. Validasi akhir: harus diawali `62` dan panjang digit setelahnya 8 s/d 13 angka. |
+    | `link_wa` | String | Nomor WhatsApp tujuan order (e.g. `08156392250` atau `628156392250`) | Opsional. Sistem menormalkan awalan `0` menjadi `62`. |
     | `gambar` | File (Binary) | Foto produk | Opsional, Maks 5MB, format: JPG/PNG/WebP |
-
-    > [!TIP]
-    > Di Frontend, user cukup menginput nomor WA biasa (misalnya `08156392250`), backend akan otomatis melakukan konversi ke format internasional `628156392250`.
 
 *   **Response Sukses (201 Created):**
     ```json
@@ -565,11 +565,12 @@ Mendapatkan deskripsi detail produk untuk kebutuhan popup modal di Frontend.
       "data": {
         "id": 4,
         "nama_produk": "Abon Lele Edumina",
+        "harga": "30000.00",
         "deskripsi": "Abon lele gurih non-MSG, cocok untuk anak-anak.",
         "link_wa": "628156392250",
         "gambar": "uploads/produk/1715482390123-ab3d6e5a.png",
-        "created_at": "2026-07-18T22:50:00.000Z",
-        "updated_at": "2026-07-18T22:50:00.000Z"
+        "created_at": "2026-07-20T03:17:00.000Z",
+        "updated_at": "2026-07-20T03:17:00.000Z"
       }
     }
     ```
@@ -585,6 +586,7 @@ Mendapatkan deskripsi detail produk untuk kebutuhan popup modal di Frontend.
     | Field | Tipe Data | Keterangan | Validasi |
     | :--- | :--- | :--- | :--- |
     | `nama_produk` | String | Nama produk baru | Opsional, tidak boleh kosong jika dikirim |
+    | `harga` | Decimal / Number | Harga baru (kirim string kosong `""` jika ingin menghapus harga) | Opsional |
     | `deskripsi` | String | Deskripsi baru | Opsional |
     | `link_wa` | String | Nomor WA tujuan baru | Opsional, validasi sama seperti Create |
     | `gambar` | File (Binary) | Foto produk baru | Opsional, Maks 5MB, format: JPG/PNG/WebP |
@@ -596,11 +598,12 @@ Mendapatkan deskripsi detail produk untuk kebutuhan popup modal di Frontend.
       "data": {
         "id": 4,
         "nama_produk": "Abon Lele Edumina Pedas",
+        "harga": "35000.00",
         "deskripsi": "Abon lele gurih varian rasa pedas.",
         "link_wa": "628156392250",
         "gambar": "uploads/produk/1715482500123-cd8e9f2a.png", // Gambar lama akan terhapus jika file baru dikirim
-        "created_at": "2026-07-18T22:50:00.000Z",
-        "updated_at": "2026-07-18T22:55:00.000Z"
+        "created_at": "2026-07-20T03:17:00.000Z",
+        "updated_at": "2026-07-20T03:18:00.000Z"
       }
     }
     ```

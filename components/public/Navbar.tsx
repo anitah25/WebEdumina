@@ -122,13 +122,24 @@ export default function Navbar() {
                 Kampung Siroto
               </span>
             </h2>
-            <Image
-              src="/logoNavbar.svg"
-              alt="logo"
-              width={150}
-              height={60}
-              priority
-            />
+            <div className="flex items-center gap-3 rounded-full bg-white px-6 py-2">
+              <Image
+                src="/logo-edumina.svg"
+                alt="Logo Edumina"
+                width={120}
+                height={50}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+              <Image
+                src="/logo-minalancar.svg"
+                alt="Logo Mina Lancar"
+                width={120}
+                height={50}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+            </div>
           </Link>
         </div>
 

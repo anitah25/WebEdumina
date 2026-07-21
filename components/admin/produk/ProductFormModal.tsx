@@ -6,6 +6,7 @@ import UnsavedChangesModal from "./UnsavedChangesModal";
 interface Product {
   id: number;
   nama_produk: string;
+  harga?: string | null;
   deskripsi: string;
   gambar: string;
   link_wa: string;
@@ -15,7 +16,7 @@ interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   editingProduct: Product | null;
-  onSave: (name: string, desc: string, image: string, wa: string) => void;
+  onSave: (name: string, harga: string, desc: string, image: string, wa: string) => void;
 }
 
 export default function ProductFormModal({
@@ -28,12 +29,13 @@ export default function ProductFormModal({
   const [prevIsOpen, setPrevIsOpen] = useState(false);
 
   const [formName, setFormName] = useState("");
+  const [formHarga, setFormHarga] = useState("");
   const [formDesc, setFormDesc] = useState("");
   const [formImage, setFormImage] = useState("");
   const [formWa, setFormWa] = useState("");
 
   // Track initial values to detect if form is dirty
-  const [initialValues, setInitialValues] = useState({ name: "", desc: "", image: "", wa: "" });
+  const [initialValues, setInitialValues] = useState({ name: "", harga: "", desc: "", image: "", wa: "" });
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -42,14 +44,16 @@ export default function ProductFormModal({
     setPrevEditingProduct(editingProduct);
     if (isOpen) {
       let initName = "";
+      let initHarga = "";
       let initDesc = "";
       let initImage = "";
       let initWa = "";
 
       if (editingProduct) {
         initName = editingProduct.nama_produk;
-        initDesc = editingProduct.deskripsi;
-        initImage = editingProduct.gambar;
+        initHarga = editingProduct.harga ? String(editingProduct.harga) : "";
+        initDesc = editingProduct.deskripsi || "";
+        initImage = editingProduct.gambar || "";
 
         // Extract WA number or keep full link
         const waMatch = editingProduct.link_wa.match(/wa\.me\/([^\?]+)/);
@@ -61,10 +65,11 @@ export default function ProductFormModal({
       }
 
       setFormName(initName);
+      setFormHarga(initHarga);
       setFormDesc(initDesc);
       setFormImage(initImage);
       setFormWa(initWa);
-      setInitialValues({ name: initName, desc: initDesc, image: initImage, wa: initWa });
+      setInitialValues({ name: initName, harga: initHarga, desc: initDesc, image: initImage, wa: initWa });
       setShowUnsavedConfirm(false);
       setValidationError(null);
     }
@@ -74,6 +79,7 @@ export default function ProductFormModal({
 
   const isDirty =
     formName !== initialValues.name ||
+    formHarga !== initialValues.harga ||
     formDesc !== initialValues.desc ||
     formImage !== initialValues.image ||
     formWa !== initialValues.wa;
@@ -123,7 +129,7 @@ export default function ProductFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formName, formDesc, formImage, formWa);
+    onSave(formName, formHarga, formDesc, formImage, formWa);
   };
 
   return (
@@ -171,6 +177,20 @@ export default function ProductFormModal({
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="Contoh: Benih Lele Sangkuriang Super"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition"
+              />
+            </div>
+
+            {/* Product Price */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Harga Produk (Rp) <span className="text-slate-400 font-normal">(Opsional)</span>
+              </label>
+              <input
+                type="text"
+                value={formHarga}
+                onChange={(e) => setFormHarga(e.target.value)}
+                placeholder="Contoh: 25000 atau 25000.00"
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-[#1D2A62] focus:ring-1 focus:ring-[#1D2A62] transition"
               />
             </div>

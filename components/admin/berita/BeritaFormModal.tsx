@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getImageUrl } from "@/lib/api";
 import {
   BERITA_KATEGORI,
   generateSlug,
@@ -22,6 +23,17 @@ interface BeritaFormModalProps {
   onClose: () => void;
   editingBerita: AdminBerita | null;
   onSave: (data: BeritaFormData) => void;
+}
+
+function formatDateForInput(dateStr: string): string {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr.split("T")[0] || "";
+    return d.toISOString().split("T")[0];
+  } catch {
+    return dateStr.split("T")[0] || "";
+  }
 }
 
 export default function BeritaFormModal({
@@ -48,11 +60,11 @@ export default function BeritaFormModal({
     setPrevEditingBerita(editingBerita);
     if (isOpen) {
       if (editingBerita) {
-        setFormJudul(editingBerita.judul);
-        setFormSlug(editingBerita.slug);
-        setFormIsiKonten(editingBerita.isi_konten);
-        setFormTanggal(editingBerita.tanggal_publish);
-        setFormGambar(editingBerita.gambar);
+        setFormJudul(editingBerita.judul || "");
+        setFormSlug(editingBerita.slug || "");
+        setFormIsiKonten(editingBerita.isi_konten || "");
+        setFormTanggal(formatDateForInput(editingBerita.tanggal_publish));
+        setFormGambar(editingBerita.gambar || "");
         setFormRingkasan(editingBerita.ringkasan || "");
         setFormKategori(editingBerita.kategori || "");
         setSlugTouched(true);
@@ -304,7 +316,7 @@ export default function BeritaFormModal({
                 <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={formGambar}
+                    src={formGambar.startsWith("data:") ? formGambar : getImageUrl(formGambar)}
                     alt="Preview"
                     className="w-full h-full object-cover"
                   />

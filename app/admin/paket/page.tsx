@@ -91,7 +91,8 @@ export default function PaketAdminPage() {
       formData.append("judul", data.judul);
       
       // Clean price value from symbols/periods before sending to backend
-      const cleanPrice = String(data.harga).replace(/[^\d\.]/g, "");
+      let cleanPrice = String(data.harga).trim();
+      cleanPrice = cleanPrice.replace(/Rp\s?/gi, "").replace(/\./g, "").replace(/,/g, ".");
       formData.append("harga", cleanPrice);
       formData.append("deskripsi_singkat", data.deskripsi_singkat || "");
       formData.append("deskripsi_lengkap", data.deskripsi_lengkap || "");

@@ -11,6 +11,7 @@ import { apiRequest, getImageUrl, dataURLtoFile } from "@/lib/api";
 interface Product {
   id: number;
   nama_produk: string;
+  harga?: string | null;
   deskripsi: string;
   gambar: string;
   link_wa: string;
@@ -109,6 +110,7 @@ export default function ProdukCRUDPage() {
   // Save Product (Create / Update)
   const handleSaveProduct = async (
     name: string,
+    harga: string,
     desc: string,
     image: string,
     wa: string,
@@ -117,6 +119,7 @@ export default function ProdukCRUDPage() {
     try {
       const formData = new FormData();
       formData.append("nama_produk", name);
+      formData.append("harga", harga);
       formData.append("deskripsi", desc);
 
       // Clean WA input: backend expects raw WA number (it normalizes 0 -> 62 internally)
@@ -138,7 +141,7 @@ export default function ProdukCRUDPage() {
 
         if (response.success && response.data) {
           setProducts((prev) =>
-            prev.map((p) => (p.id === editingId ? response.data : p))
+            prev.map((p) => (p.id === editingId ? response.data : p)),
           );
           setNotification({
             message: "Produk berhasil diperbarui!",
@@ -251,7 +254,8 @@ export default function ProdukCRUDPage() {
             </h1>
           </div>
           <p className="text-sm text-white/70 mt-1">
-            Kelola data lele konsumsi, benih lele unggul, pakan mandiri, dan produk olahan.
+            Kelola data lele konsumsi, benih lele unggul, pakan mandiri, dan
+            produk olahan.
           </p>
         </div>
 
@@ -373,6 +377,17 @@ export default function ProdukCRUDPage() {
                   <h3 className="font-extrabold text-slate-800 text-lg group-hover:text-[#1D2A62] transition-colors leading-tight">
                     {product.nama_produk}
                   </h3>
+                  {product.harga && (
+                    <p className="text-sm font-bold text-[#437118]">
+                      {isNaN(Number(product.harga))
+                        ? product.harga
+                        : new Intl.NumberFormat("id-ID", {
+                            style: "currency",
+                            currency: "IDR",
+                            maximumFractionDigits: 0,
+                          }).format(Number(product.harga))}
+                    </p>
+                  )}
                   <p className="text-slate-500 text-xs leading-relaxed line-clamp-3">
                     {product.deskripsi || "Tidak ada deskripsi produk."}
                   </p>
@@ -381,7 +396,11 @@ export default function ProdukCRUDPage() {
                 <div className="pt-2 border-t border-slate-100 space-y-3">
                   {/* WhatsApp click tester */}
                   <a
-                    href={product.link_wa?.startsWith("http") ? product.link_wa : `https://wa.me/${product.link_wa}`}
+                    href={
+                      product.link_wa?.startsWith("http")
+                        ? product.link_wa
+                        : `https://wa.me/${product.link_wa}`
+                    }
                     onClick={(e) => e.stopPropagation()}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -389,11 +408,11 @@ export default function ProdukCRUDPage() {
                   >
                     {/* WhatsApp icon */}
                     <svg
-                      className="w-4 h-4 text-[#437118]"
+                      className="w-4 h-4 flex-shrink-0"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path d="M17.472 14.382c-.022-.015-.022-.015-.502-.254-.09-.045-.27-.135-.555-.273-.12-.06-.18-.09-.27-.09-.09 0-.18.045-.27.135-.09.09-.36.45-.45.54-.09.09-.18.09-.315.045-.135-.045-.585-.213-1.125-.705-.42-.375-.705-.84-.795-.945-.09-.09-.015-.135.045-.225.075-.075.135-.18.225-.27.09-.09.12-.135.18-.225.06-.09.03-.18-.015-.27-.045-.09-.45-1.08-.615-1.485-.165-.39-.33-.33-.45-.33-.12-.015-.27-.015-.405-.015-.135 0-.36.045-.54.27-.18.18-.72.72-.72 1.755s.765 2.025.87 2.16c.105.135 1.5 2.31 3.6 3.195.5.21 1 .345 1.335.45.51.16.975.135 1.335.075.405-.06 1.245-.51 1.425-1 .18-.51.18-.93.12-1-.06-.075-.18-.12-.3-.135zm-5.462-12.382c-5.52 0-10 4.48-10 10 0 1.77.46 3.48 1.34 5l-1.42 5.19 5.3-.1.14-.07C8.89 22.54 10.4 23 12 23c5.52 0 10-4.48 10-10s-4.48-10-10-10zm0 18.2c-1.56 0-3.1-.42-4.44-1.21l-.32-.19-3.29.09.89-3.2-.21-.33C3.84 14.65 3.4 12.87 3.4 11c0-4.75 3.85-8.6 8.6-8.6s8.6 3.85 8.6 8.6-3.85 8.6-8.6 8.6z" />
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                     </svg>
                     WhatsApp Tester
                   </a>

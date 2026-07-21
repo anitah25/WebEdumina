@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getImageUrl } from "@/lib/api";
 
 interface Activity {
   id: number;
@@ -14,6 +15,17 @@ interface ActivityFormModalProps {
   onClose: () => void;
   editingActivity: Activity | null;
   onSave: (judul: string, tanggal: string, gambar: string) => void;
+}
+
+function formatDateForInput(dateStr: string): string {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr.split("T")[0] || "";
+    return d.toISOString().split("T")[0];
+  } catch {
+    return dateStr.split("T")[0] || "";
+  }
 }
 
 export default function ActivityFormModal({
@@ -34,9 +46,9 @@ export default function ActivityFormModal({
     setPrevEditingActivity(editingActivity);
     if (isOpen) {
       if (editingActivity) {
-        setFormJudul(editingActivity.judul);
-        setFormTanggal(editingActivity.tanggal);
-        setFormGambar(editingActivity.gambar);
+        setFormJudul(editingActivity.judul || "");
+        setFormTanggal(formatDateForInput(editingActivity.tanggal));
+        setFormGambar(editingActivity.gambar || "");
       } else {
         setFormJudul("");
         // Default to today's date in YYYY-MM-DD
@@ -140,7 +152,11 @@ export default function ActivityFormModal({
               {formGambar ? (
                 <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={formGambar} alt="Preview" className="w-full h-full object-cover" />
+                  <img
+                    src={formGambar.startsWith("data:") ? formGambar : getImageUrl(formGambar)}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
                   <button
                     type="button"
                     onClick={handleRemoveImage}

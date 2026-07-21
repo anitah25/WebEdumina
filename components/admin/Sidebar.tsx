@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -23,11 +24,31 @@ const navigationItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState<string>("admin");
+  const [userName, setUserName] = useState<string>("Administrator");
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.role) setUserRole(parsed.role);
+        if (parsed.nama_lengkap) setUserName(parsed.nama_lengkap);
+      } catch {}
+    }
+  }, []);
+
   const handleLogout = () => {
     console.log("Logout clicked");
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     window.location.href = "/";
   };
+
+  const filteredNavItems = navigationItems.filter(
+    (item) => item.href !== "/admin/pengguna" || userRole !== "operator"
+  );
 
   return (
     <aside className="w-60 bg-(--bg-dark) text-white h-screen flex flex-col justify-between">
@@ -100,7 +121,7 @@ export default function Sidebar() {
           <span className="font-bold text-(--color-primary-light)/60 px-3 block">
             Menu Utama
           </span>
-          {navigationItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const isActive = pathname === item.href;
             const IconComponent = item.icon;
             return (
@@ -127,16 +148,18 @@ export default function Sidebar() {
           href="/admin/profil"
           className="flex items-center gap-3 bg-(--color-primary-light)/10 p-3 rounded-xl border border-slate-800 hover:bg-(--color-primary-light)/20 transition active:scale-98 block group"
         >
-          {/* Avatar Bulat Huruf A */}
+          {/* Avatar Bulat Huruf First Letter */}
           <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center font-bold text-white text-lg shrink-0 group-hover:scale-105 transition-transform duration-200">
-            A
+            {userName ? userName.charAt(0).toUpperCase() : "A"}
           </div>
           {/* Detail Teks */}
           <div className="flex flex-col min-w-0">
             <span className="font-semibold text-white truncate text-sm">
-              Administrator
+              {userName}
             </span>
-            <span className="text-xs text-slate-400 truncate">Super Admin</span>
+            <span className="text-xs text-slate-400 truncate capitalize">
+              {userRole === "admin" ? "Administrator" : "Operator"}
+            </span>
           </div>
         </Link>
 

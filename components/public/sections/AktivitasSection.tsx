@@ -154,6 +154,7 @@ export default function AktivitasSection() {
             <button
               onClick={prev}
               disabled={current === 0}
+              suppressHydrationWarning
               aria-label="Sebelumnya"
               className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10
                          w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
@@ -193,6 +194,7 @@ export default function AktivitasSection() {
             <button
               onClick={next}
               disabled={current === maxIndex}
+              suppressHydrationWarning
               aria-label="Selanjutnya"
               className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10
                          w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg

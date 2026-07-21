@@ -2,16 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ActivityIcon,
-  NewsIcon,
-  ProductIcon,
-} from "@/components/admin/Icons";
+import { ActivityIcon, NewsIcon, ProductIcon, PackageIcon } from "@/components/admin/Icons";
 import { apiRequest } from "@/lib/api";
 
 export default function AdminDashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
-  const [stats, setStats] = useState({ berita: 0, produk: 0, aktivitas: 0 });
+  const [stats, setStats] = useState({ berita: 0, produk: 0, aktivitas: 0, paket: 0 });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -20,15 +16,17 @@ export default function AdminDashboardPage() {
 
     const fetchStats = async () => {
       try {
-        const [resBerita, resProduk, resAktivitas] = await Promise.all([
+        const [resBerita, resProduk, resAktivitas, resPaket] = await Promise.all([
           apiRequest("/api/berita?limit=1"),
           apiRequest("/api/produk?limit=1"),
           apiRequest("/api/aktivitas?limit=1"),
+          apiRequest("/api/paket-edukasi?limit=1"),
         ]);
         setStats({
           berita: resBerita.meta?.total || 0,
           produk: resProduk.meta?.total || 0,
           aktivitas: resAktivitas.meta?.total || 0,
+          paket: resPaket.meta?.total || 0,
         });
       } catch (err) {
         console.error("Failed to fetch stats for dashboard:", err);
@@ -122,7 +120,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* 2. Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: Total Berita */}
         <div className="bg-white rounded-3xl p-6 border border-white/40 shadow-sm flex flex-col justify-between min-h-[170px] hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
           <div className="flex items-start justify-between">
@@ -136,9 +134,6 @@ export default function AdminDashboardPage() {
             </div>
             <div className="text-sm font-semibold text-slate-800 mt-1">
               Total Berita
-            </div>
-            <div className="text-xs text-slate-400 mt-0.5">
-              Terkoneksi ke database
             </div>
           </div>
         </div>
@@ -157,13 +152,27 @@ export default function AdminDashboardPage() {
             <div className="text-sm font-semibold text-slate-800 mt-1">
               Total Produk
             </div>
-            <div className="text-xs text-slate-400 mt-0.5">
-              Terkoneksi ke database
+          </div>
+        </div>
+
+        {/* Card 3: Total Paket Edukasi */}
+        <div className="bg-white rounded-3xl p-6 border border-white/40 shadow-sm flex flex-col justify-between min-h-[170px] hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-[#E5F1FD] flex items-center justify-center text-[#1D2A62] shadow-sm transition-transform duration-300 group-hover:scale-105">
+              <PackageIcon />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="text-4xl font-extrabold text-[#1D2A62] tracking-tight">
+              {stats.paket}
+            </div>
+            <div className="text-sm font-semibold text-slate-800 mt-1">
+              Total Paket Edukasi
             </div>
           </div>
         </div>
 
-        {/* Card 3: Total Aktivitas */}
+        {/* Card 4: Total Aktivitas */}
         <div className="bg-white rounded-3xl p-6 border border-white/40 shadow-sm flex flex-col justify-between min-h-[170px] hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
           <div className="flex items-start justify-between">
             <div className="w-12 h-12 rounded-2xl bg-[#E5F1FD] flex items-center justify-center text-[#1D2A62] shadow-sm transition-transform duration-300 group-hover:scale-105">
@@ -176,9 +185,6 @@ export default function AdminDashboardPage() {
             </div>
             <div className="text-sm font-semibold text-slate-800 mt-1">
               Total Aktivitas
-            </div>
-            <div className="text-xs text-slate-400 mt-0.5">
-              Terkoneksi ke database
             </div>
           </div>
         </div>
@@ -211,6 +217,16 @@ export default function AdminDashboardPage() {
               <ProductIcon />
             </div>
             + Tambah Produk
+          </Link>
+
+          <Link
+            href="/admin/paket"
+            className="inline-flex items-center gap-2 bg-[#437118] hover:bg-[#345912] active:scale-95 text-white px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md shadow-[#437118]/15 hover:shadow-lg hover:shadow-[#437118]/25"
+          >
+            <div className="w-5 h-5 shrink-0 flex items-center justify-center text-white">
+              <PackageIcon />
+            </div>
+            + Tambah Paket Edukasi
           </Link>
 
           <Link

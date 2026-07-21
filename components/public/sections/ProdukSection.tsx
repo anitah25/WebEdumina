@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Produk } from "@/types/produk";
 import ProdukModal from "../modals/ProdukModal";
 import { apiRequest, getImageUrl } from "@/lib/api";
@@ -49,7 +49,20 @@ function ProdukCard({
 
 export default function ProdukSection() {
   const [produkList, setProdukList] = useState<Produk[]>([]);
-  const total = produkList.length;
+
+  // If products are fewer than VISIBLE (5), multiply the list so the carousel is filled and can auto-slide
+  const displayList = useMemo(() => {
+    if (produkList.length === 0) return [];
+    if (produkList.length >= VISIBLE) return produkList;
+
+    let list = [...produkList];
+    while (list.length < VISIBLE + 2) {
+      list = [...list, ...produkList];
+    }
+    return list;
+  }, [produkList]);
+
+  const total = displayList.length;
   const maxIndex = Math.max(0, total - VISIBLE);
   const [current, setCurrent] = useState(0);
 
@@ -66,6 +79,15 @@ export default function ProdukSection() {
             nama: item.nama_produk,
             gambar: item.gambar,
             deskripsi: item.deskripsi,
+            harga: item.harga
+              ? isNaN(Number(item.harga))
+                ? item.harga
+                : new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    maximumFractionDigits: 0,
+                  }).format(Number(item.harga))
+              : undefined,
             linkWa: item.link_wa,
           }));
           setProdukList(mapped);
@@ -126,17 +148,17 @@ export default function ProdukSection() {
             </button>
 
             {/* Track */}
-            <div className="overflow-hidden">
+            <div className="overflow-hidden w-full">
               <div
-                className="flex transition-transform duration-500 ease-in-out"
+                className="flex justify-between items-center transition-transform duration-500 ease-in-out w-full"
                 style={{
                   gap: `${GAP}px`,
                   transform: `translateX(calc(-${current} * (183px + ${GAP}px)))`,
                 }}
               >
-                {produkList.map((item) => (
+                {displayList.map((item, index) => (
                   <ProdukCard
-                    key={item.id}
+                    key={`${item.id}-${index}`}
                     item={item}
                     onClick={() => handleCardClick(item)}
                   />

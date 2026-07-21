@@ -73,7 +73,7 @@ export default function HeroSection() {
 
               <div>
                 <div className="text-xl md:text-2xl font-extrabold text-[#1D2A62] leading-tight">
-                  25 +
+                  130 +
                 </div>
                 <div className="text-xs text-gray-400 font-semibold tracking-wide">
                   Kolam Budidaya
@@ -157,8 +157,10 @@ export default function HeroSection() {
 
               <div>
                 <div className="text-xl md:text-2xl font-extrabold text-[#1D2A62] leading-tight">
-                  120 +{" "}
-                  <span className="text-xs font-bold text-gray-500">ton</span>
+                  65000 +{" "}
+                  <span className="text-xs font-bold text-gray-500">
+                    kg/tahun
+                  </span>
                 </div>
                 <div className="text-xs text-gray-400 font-semibold tracking-wide">
                   Produksi Lele

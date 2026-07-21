@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { UserIcon } from "@/components/admin/Icons";
 import UserFormModal from "@/components/admin/pengguna/UserFormModal";
 import DeleteConfirmModal from "@/components/admin/pengguna/DeleteConfirmModal";
@@ -8,8 +9,22 @@ import type { AdminUser, UserFormData } from "@/types/user";
 import { apiRequest } from "@/lib/api";
 
 export default function PenggunaPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Redirect operator role away from Pengguna page
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.role === "operator") {
+          router.replace("/forbidden");
+        }
+      } catch {}
+    }
+  }, [router]);
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
