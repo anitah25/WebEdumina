@@ -32,7 +32,7 @@ export default function HeroSection() {
           </div>
 
           {/* Right Column: Hero Image with Gradient Overlay */}
-          <div className="lg:col-span-6 relative w-full h-[280px] sm:h-[380px] lg:h-[450px]">
+          <div className="hidden md:block lg:col-span-6 relative w-full h-[280px] sm:h-[380px] lg:h-[450px]">
             <Image
               src="/gambarHerosection.svg"
               alt="Belajar Praktik Berdaya Budidaya Lele"

@@ -6,8 +6,6 @@ import type { Aktivitas } from "@/types/aktivitas";
 import AktivitasModal from "../modals/AktivitasModal";
 import { apiRequest, getImageUrl } from "@/lib/api";
 
-const VISIBLE = 4; // cards visible at a time on desktop
-
 function formatDate(dateStr: string) {
   try {
     const date = new Date(dateStr);
@@ -30,81 +28,97 @@ function AktivitasCard({
 }) {
   return (
     <div
-      className="relative flex-shrink-0 overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform"
-      style={{ height: "296px", width: "100%" }}
+      className="relative w-full h-[320px] sm:h-[296px] rounded-xl overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform shadow-sm border border-gray-100"
       onClick={onClick}
     >
-      {/* Image */}
+      {/* Background Image */}
       <Image
         src={getImageUrl(item.gambar)}
         alt={item.judul}
         fill
         className="object-cover"
-        style={{ borderRadius: "8px" }}
-        sizes="(max-width: 640px) 100vw, 25vw"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
       />
 
-      {/* Gradient overlay */}
-      <div
-        className="absolute left-0 right-0"
-        style={{
-          top: "137px",
-          height: "159px",
-          borderRadius: "0 0 8px 8px",
-          background:
-            "linear-gradient(181.45deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 18.27%, #fff 63.46%)",
-          borderRight: "1px solid #e8e8e8",
-          borderBottom: "1px solid #e8e8e8",
-          borderLeft: "1px solid #e8e8e8",
-          boxSizing: "border-box",
-        }}
-      />
-
-      {/* Title */}
-      <p
-        className="absolute text-black leading-snug"
-        style={{
-          top: "227px",
-          left: "13px",
-          fontSize: "16px",
-          fontWeight: 500,
-          fontFamily: "Poppins, sans-serif",
-          right: "13px",
-        }}
-      >
-        {item.judul}
-      </p>
-
-      {/* Date */}
-      <p
-        className="absolute text-gray-500"
-        style={{
-          top: "258px",
-          left: "13px",
-          fontSize: "13px",
-          fontWeight: 300,
-          fontFamily: "Poppins, sans-serif",
-        }}
-      >
-        {formatDate(item.tanggal)}
-      </p>
+      {/* Bottom Gradient Overlay & Text */}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/85 to-transparent pt-16 pb-4 px-4 flex flex-col justify-end rounded-b-xl border-b border-x border-gray-200/50">
+        <p className="text-gray-900 text-base font-semibold leading-snug line-clamp-2 drop-shadow-xs">
+          {item.judul}
+        </p>
+        <p className="text-gray-500 text-xs font-normal mt-1">
+          {formatDate(item.tanggal)}
+        </p>
+      </div>
     </div>
   );
 }
 
 export default function AktivitasSection() {
   const [aktivitasList, setAktivitasList] = useState<Aktivitas[]>([]);
-  const total = aktivitasList.length;
-  const maxIndex = Math.max(0, total - VISIBLE);
+  const [visibleCount, setVisibleCount] = useState(4);
   const [current, setCurrent] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
-  
+
+  // Responsive visible count
+  useEffect(() => {
+    const updateVisibleCount = () => {
+      const w = window.innerWidth;
+      if (w < 640) {
+        setVisibleCount(1);
+      } else if (w < 768) {
+        setVisibleCount(2);
+      } else if (w < 1024) {
+        setVisibleCount(3);
+      } else {
+        setVisibleCount(4);
+      }
+    };
+
+    updateVisibleCount();
+    window.addEventListener("resize", updateVisibleCount);
+    return () => window.removeEventListener("resize", updateVisibleCount);
+  }, []);
+
+  const total = aktivitasList.length;
+  const maxIndex = Math.max(0, total - visibleCount);
+
+  // Clamp current index when screen size / maxIndex changes
+  useEffect(() => {
+    if (current > maxIndex) {
+      setCurrent(maxIndex);
+    }
+  }, [maxIndex, current]);
+
   // Modal state
   const [selectedItem, setSelectedItem] = useState<Aktivitas | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const prev = useCallback(() => setCurrent((c) => (c === 0 ? maxIndex : c - 1)), [maxIndex]);
   const next = useCallback(() => setCurrent((c) => (c >= maxIndex ? 0 : c + 1)), [maxIndex]);
+
+  // Touch swipe handling for mobile
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (diff > 50) {
+      next();
+    } else if (diff < -50) {
+      prev();
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
 
   useEffect(() => {
     const fetchAktivitas = async () => {
@@ -135,20 +149,22 @@ export default function AktivitasSection() {
     setIsModalOpen(true);
   };
 
+  const gapPx = 16;
+
   return (
     <>
-      <section id="aktivitas" className="w-full bg-white py-16 lg:py-20 overflow-hidden">
-        <div className="w-full px-6 lg:px-12 mx-auto max-w-[1440px]">
+      <section id="aktivitas" className="w-full bg-white py-12 lg:py-20 overflow-hidden">
+        <div className="w-full px-4 sm:px-6 lg:px-12 mx-auto max-w-[1440px]">
 
           {/* ── Header ── */}
-          <div className="mb-8">
-            <span className="text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
+          <div className="mb-6 lg:mb-8">
+            <span className="text-xs sm:text-sm font-bold text-[var(--color-accent-darkgreen)] uppercase tracking-widest">
               Aktivitas Kami
             </span>
           </div>
 
           {/* ── Carousel wrapper ── */}
-          <div className="relative">
+          <div className="relative px-2 sm:px-0">
 
             {/* Prev button */}
             <button
@@ -156,10 +172,10 @@ export default function AktivitasSection() {
               disabled={current === 0}
               suppressHydrationWarning
               aria-label="Sebelumnya"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10
-                         w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
+              className="absolute -left-2 sm:-left-5 top-1/2 -translate-y-1/2 z-10
+                         w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#1D2A62] text-white shadow-lg
                          flex items-center justify-center
-                         disabled:opacity-30 disabled:cursor-not-allowed
+                         disabled:opacity-20 disabled:cursor-not-allowed
                          hover:bg-[#263580] transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -168,18 +184,27 @@ export default function AktivitasSection() {
             </button>
 
             {/* Track */}
-            <div className="overflow-hidden">
+            <div
+              className="overflow-hidden touch-pan-y"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <div
                 ref={trackRef}
-                className="flex gap-5 transition-transform duration-500 ease-in-out"
+                className="flex transition-transform duration-500 ease-in-out"
                 style={{
-                  transform: `translateX(calc(-${current} * (100% / ${VISIBLE} + 5px / ${VISIBLE} * (${VISIBLE} - 1))))`,
+                  gap: `${gapPx}px`,
+                  transform: `translateX(calc(-${current} * (100% / ${visibleCount} + ${gapPx / visibleCount}px)))`,
                 }}
               >
                 {aktivitasList.map((item) => (
                   <div
                     key={item.id}
-                    style={{ minWidth: `calc((100% - ${(VISIBLE - 1) * 20}px) / ${VISIBLE})` }}
+                    className="shrink-0"
+                    style={{
+                      width: `calc((100% - ${(visibleCount - 1) * gapPx}px) / ${visibleCount})`,
+                    }}
                   >
                     <AktivitasCard
                       item={item}
@@ -196,10 +221,10 @@ export default function AktivitasSection() {
               disabled={current === maxIndex}
               suppressHydrationWarning
               aria-label="Selanjutnya"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10
-                         w-10 h-10 rounded-full bg-[var(--color-primary-dark)] text-white shadow-lg
+              className="absolute -right-2 sm:-right-5 top-1/2 -translate-y-1/2 z-10
+                         w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#1D2A62] text-white shadow-lg
                          flex items-center justify-center
-                         disabled:opacity-30 disabled:cursor-not-allowed
+                         disabled:opacity-20 disabled:cursor-not-allowed
                          hover:bg-[#263580] transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -209,20 +234,22 @@ export default function AktivitasSection() {
           </div>
 
           {/* ── Dot indicators ── */}
-          <div className="flex items-center justify-center gap-2 mt-8">
-            {dots.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrent(i)}
-                aria-label={`Slide ${i + 1}`}
-                className={`rounded-full transition-all duration-300 ${
-                  i === current
-                    ? "w-4 h-3 bg-[var(--color-primary-dark)]"
-                    : "w-3 h-3 bg-gray-300 hover:bg-gray-400"
-                }`}
-              />
-            ))}
-          </div>
+          {dots.length > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6 sm:mt-8">
+              {dots.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  aria-label={`Slide ${i + 1}`}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === current
+                      ? "w-5 h-2.5 bg-[#1D2A62]"
+                      : "w-2.5 h-2.5 bg-gray-300 hover:bg-gray-400"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
         </div>
       </section>

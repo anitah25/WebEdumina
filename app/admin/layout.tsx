@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "@/components/admin/Sidebar";
 import Header from "@/components/admin/Header.";
 import { apiRequest } from "@/lib/api";
@@ -13,7 +13,14 @@ type AdminLayoutProps = {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const verifySession = async () => {
@@ -34,7 +41,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           router.push("/login");
         }
       } catch (err) {
-        // apiRequest already handles 401 redirection, this is a fallback for other network errors
+        // apiRequest already handles 401 redirection, fallback for network errors
         router.push("/login");
       }
     };
@@ -52,12 +59,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="h-screen bg-[#D0E6FD] flex overflow-hidden">
-      <Sidebar />
+      {/* Responsive Sidebar Component */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <Header />
+      {/* Main Content Viewport */}
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+        <Header onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
 
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
   );
