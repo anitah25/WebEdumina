@@ -41,7 +41,7 @@ export async function apiRequest(path: string, options: RequestInit = {}) {
 }
 
 export function getImageUrl(path?: string): string {
-  if (!path) return "/favicon.ico";
+  if (!path) return "/logo-edumina.svg";
   if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) {
     return path;
   }
