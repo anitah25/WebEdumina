@@ -141,6 +141,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="group flex items-start gap-3 text-white/80 hover:text-white transition-colors duration-200"
                 style={{ fontFamily: "Poppins, sans-serif" }}
+                suppressHydrationWarning
               >
                 {/* Pin icon */}
                 <span className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-white/10 group-hover:bg-[#AFD06E]/20 transition-colors duration-200">
